@@ -141,9 +141,12 @@ def gen_questions(n: int = 50, out: str = "data/eval/candidates.jsonl", seed: in
     from .generation import LLM
     from .qgen import draft_questions
 
-    existing = Path(out).read_text(encoding="utf-8").splitlines() if Path(out).exists() else []
-    prior = [json.loads(x)["question"] for path in (out, DEFAULT_QUESTIONS) if Path(path).exists()
-             for x in Path(path).read_text(encoding="utf-8").splitlines() if x.strip()]
+    records = [json.loads(x) for path in (out, DEFAULT_QUESTIONS, "data/eval/review_log.jsonl")
+               if Path(path).exists()
+               for x in Path(path).read_text(encoding="utf-8").splitlines() if x.strip()]
+    prior = [r["question"] for r in records]
+    # Draft ids must never be reused, including ids of drafts that were already rejected.
+    next_id = max((int(r["qid"][1:]) for r in records if r["qid"].startswith("g")), default=0) + 1
     llm = LLM(GenerationConfig(model=model, temperature=0.7))
     with open(out, "a", encoding="utf-8") as f:
 
@@ -153,7 +156,7 @@ def gen_questions(n: int = 50, out: str = "data/eval/candidates.jsonl", seed: in
             typer.echo(f"{q.qid} [{q.type}] {q.question}")
 
         drafts, rejected = draft_questions(llm, load_corpus(Path(corpus)), n, seed,
-                                           len(existing) + 1, existing=prior, on_draft=save)
+                                           next_id, existing=prior, on_draft=save)
     typer.echo(f"appended {len(drafts)} drafts to {out}; rejected: {rejected}")
 
 
