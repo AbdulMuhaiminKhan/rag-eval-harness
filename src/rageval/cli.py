@@ -184,7 +184,7 @@ def review(candidates: str = "data/eval/candidates.jsonl", questions: str = DEFA
 
 
 @app.command()
-def gate(run: str, baseline: str = "ci/baseline.json", max_drop: float = 0.03):
+def gate(run: str = "runs/ci", baseline: str = "ci/baseline.json", max_drop: float = 0.03):
     """Fail (exit 1) if any gated metric dropped more than max_drop below the baseline."""
     s = json.loads((Path(run) / "summary.json").read_text(encoding="utf-8"))
     b = json.loads(Path(baseline).read_text(encoding="utf-8"))
@@ -199,7 +199,8 @@ def gate(run: str, baseline: str = "ci/baseline.json", max_drop: float = 0.03):
 
 
 @app.command()
-def calibrate(run: str, labels: str = "data/eval/human_labels.jsonl"):
+def calibrate(run: str = typer.Option(..., help="a --generate run dir"),
+              labels: str = "data/eval/human_labels.jsonl"):
     """Report judge vs human agreement on a hand-labelled subset of a --generate run."""
     from .judge import agreement
 

@@ -1,0 +1,9 @@
+{
+  "num_questions": 30,
+  "num_chunks": 4321,
+  "metrics": {
+    "recall@5": 0.8269,
+    "mrr@10": 0.5944,
+    "ndcg@10": 0.6755
+  }
+}
