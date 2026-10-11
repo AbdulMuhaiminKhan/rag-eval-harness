@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import functools
 import hashlib
 import itertools
 import json
@@ -79,10 +80,17 @@ class Config:
     def chunk_key(self) -> str:
         """Identifies a chunk set: changes only when corpus or chunking changes."""
         c = self.chunking
-        payload = {"corpus": self.corpus, "strategy": c.strategy, "params": c.params}
+        payload = {"corpus": _file_hash(self.corpus), "strategy": c.strategy, "params": c.params}
         if c.strategy == "semantic":
             payload["breakpoint_model"] = c.breakpoint_model
         return _short_hash(payload)
+
+
+@functools.lru_cache(maxsize=8)
+def _file_hash(path: str) -> str:
+    """Content hash, so editing or rebuilding the corpus invalidates cached chunks and indexes."""
+    p = Path(path)
+    return hashlib.sha1(p.read_bytes()).hexdigest() if p.exists() else path
 
 
 def _short_hash(obj: Any) -> str:

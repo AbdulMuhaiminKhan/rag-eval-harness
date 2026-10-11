@@ -57,3 +57,12 @@ def test_ablation_grid_expands():
     cfgs = expand_grid(Path(__file__).parents[1] / "configs" / "ablation.yaml")
     assert len(cfgs) == 24
     assert len({c.name for c in cfgs}) == 24
+
+
+def test_clean_markdown_fills_versions_and_keeps_placeholders():
+    raw = ('{{% heading "prerequisites" %}}\nUpgrade to {{< skew currentVersion >}} from '
+           '{{< skew currentVersionAddMinor -1 >}}. Like a {{< glossary_tooltip '
+           'term_id="deployment" >}}, run `kubectl get pod <pod-name>`.<br/> a&#58;b')
+    _, text = clean_markdown(raw, version="v1.37")
+    assert text == ("Before you begin\nUpgrade to 1.37 from 1.36. Like a deployment, "
+                    "run `kubectl get pod <pod-name>`. a:b")
