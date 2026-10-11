@@ -145,10 +145,15 @@ def gen_questions(n: int = 50, out: str = "data/eval/candidates.jsonl", seed: in
     prior = [json.loads(x)["question"] for path in (out, DEFAULT_QUESTIONS) if Path(path).exists()
              for x in Path(path).read_text(encoding="utf-8").splitlines() if x.strip()]
     llm = LLM(GenerationConfig(model=model, temperature=0.7))
-    drafts, rejected = draft_questions(llm, load_corpus(Path(corpus)), n, seed,
-                                       len(existing) + 1, existing=prior)
     with open(out, "a", encoding="utf-8") as f:
-        f.writelines(json.dumps(q.to_dict(), ensure_ascii=False) + "\n" for q in drafts)
+
+        def save(q: Question) -> None:
+            f.write(json.dumps(q.to_dict(), ensure_ascii=False) + "\n")
+            f.flush()
+            typer.echo(f"{q.qid} [{q.type}] {q.question}")
+
+        drafts, rejected = draft_questions(llm, load_corpus(Path(corpus)), n, seed,
+                                           len(existing) + 1, existing=prior, on_draft=save)
     typer.echo(f"appended {len(drafts)} drafts to {out}; rejected: {rejected}")
 
 

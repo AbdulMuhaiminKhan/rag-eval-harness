@@ -10,6 +10,7 @@ import json
 import math
 import random
 from collections import defaultdict
+from collections.abc import Callable
 
 from .chunking import fixed_chunks
 from .dataset import QUESTION_TYPES, Evidence, Question, find_span
@@ -48,9 +49,11 @@ def _jaccard(a: str, b: str) -> float:
 
 def draft_questions(llm: LLM, docs: dict[str, Document], n: int, seed: int = 0,
                     start_index: int = 1, existing: list[str] | None = None,
-                    max_overlap: float = 0.75) -> tuple[list[Question], dict[str, int]]:
+                    max_overlap: float = 0.75, on_draft: Callable[[Question], None] | None = None
+                    ) -> tuple[list[Question], dict[str, int]]:
     """Return (drafts, rejection counts). Drafts that copy the passage's wording, duplicate an
-    earlier question, or quote text that is not in the page are rejected."""
+    earlier question, or quote text that is not in the page are rejected. ``on_draft`` is called
+    for each accepted draft as soon as it exists, so a long run can be saved incrementally."""
     rng = random.Random(seed)
     # Stratify by top-level section, weighted by sqrt(size) so the huge reference section
     # does not swamp concepts and tasks; tiny sections (home, test pages) are skipped.
@@ -93,9 +96,12 @@ def draft_questions(llm: LLM, docs: dict[str, Document], n: int, seed: int = 0,
             continue
         seen.append(question)
         typ = data.get("type") if data.get("type") in QUESTION_TYPES else qtype
-        out.append(Question(
+        q = Question(
             qid=f"g{start_index + len(out):04d}", question=question, type=typ, answerable=True,
             evidence=[Evidence(doc.doc_id, quote)], reference_answer=str(data.get("answer", "")),
             origin="llm", reviewed=False,
-        ))
+        )
+        out.append(q)
+        if on_draft is not None:
+            on_draft(q)
     return out, dict(rejected)
