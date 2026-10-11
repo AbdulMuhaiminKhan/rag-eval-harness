@@ -7,8 +7,9 @@ copied verbatim from the cleaned corpus; `rageval validate` checks that.
 import json
 from pathlib import Path
 
-REVIEWER = "Claude, set approved by Abdul"
-NOTE = "Seed question drafted against the docs; evidence re-checked and set approved by the author."
+# The first 30 questions were approved by the author; later ones are checked by Claude only.
+APPROVED_BY_AUTHOR = 30
+NOTE = "Hand-drafted against the docs; every quote checked verbatim with `rageval validate`."
 
 Q = [
     ("factoid", "What is the maximum size of data a ConfigMap can hold?",
@@ -161,7 +162,128 @@ Q = [
      [], "Not answerable as asked: the replica default does not depend on cluster size."),
     ("unanswerable", "Which Helm chart version ships with Kubernetes 1.30?", [],
      "Not answerable: Helm is not part of Kubernetes releases."),
+    # Second batch: more comparison, multi-hop and unanswerable questions, which LLM drafting
+    # from a single passage cannot produce.
+    ("comparison", "What's the difference between a liveness probe and a readiness probe?",
+     [("concepts/workloads/pods/pod-lifecycle",
+       "Liveness probes determine when to restart a container."),
+      ("concepts/workloads/pods/pod-lifecycle",
+       "Readiness probes determine when a container is ready to accept traffic.")],
+     "A failing liveness probe gets the container restarted; a failing readiness probe only "
+     "stops it receiving traffic."),
+    ("comparison", "How does a NodePort Service differ from a LoadBalancer Service?",
+     [("concepts/services-networking/service",
+       "Exposes the Service on each Node's IP at a static port (the `NodePort`)."),
+      ("concepts/services-networking/service",
+       "Exposes the Service externally using an external load balancer.")],
+     "NodePort opens a static port on every node's IP; LoadBalancer exposes the Service through "
+     "an external load balancer that you or a cloud provider must supply."),
+    ("comparison",
+     "What is the difference between required and preferred node affinity?",
+     [("concepts/scheduling-eviction/assign-pod-node",
+       "- `requiredDuringSchedulingIgnoredDuringExecution`: The scheduler can't\n  schedule the "
+       "Pod unless the rule is met."),
+      ("concepts/scheduling-eviction/assign-pod-node",
+       "- `preferredDuringSchedulingIgnoredDuringExecution`: The scheduler tries to\n  find a "
+       "node that meets the rule. If a matching node is not available, the\n  scheduler still "
+       "schedules the Pod.")],
+     "Required affinity is a hard rule the Pod cannot be scheduled without; preferred affinity "
+     "is a soft preference and the Pod is still scheduled if no node matches."),
+    ("comparison", "Retain vs Delete reclaim policy: what happens to the underlying storage?",
+     [("concepts/storage/persistent-volumes",
+       "The `Retain` reclaim policy allows for manual reclamation of the resource."),
+      ("concepts/storage/persistent-volumes",
+       "For volume plugins that support the `Delete` reclaim policy, deletion removes\nboth the "
+       "PersistentVolume object from Kubernetes, as well as the associated\nstorage asset in "
+       "the external infrastructure.")],
+     "Retain keeps the volume for manual reclamation; Delete removes both the PersistentVolume "
+     "and the storage asset."),
+    ("comparison", "How is a PreferNoSchedule taint different from NoSchedule?",
+     [("concepts/scheduling-eviction/taint-and-toleration",
+       "`PreferNoSchedule` is a \"preference\" or \"soft\" version of `NoSchedule`.")],
+     "PreferNoSchedule is a soft version: the scheduler tries to avoid the node but it is not "
+     "guaranteed."),
+    ("comparison", "When should I use a Secret rather than a ConfigMap?",
+     [("concepts/configuration/secret",
+       "Secrets are similar to ConfigMaps\nbut are specifically intended to hold confidential data.",
+       [("concepts/configuration",
+         "Secrets are similar to ConfigMaps\nbut are specifically intended to hold confidential "
+         "data.")])],
+     "Use a Secret for confidential data such as passwords, tokens or keys."),
+    ("comparison", "Should a new cluster use Ingress or the Gateway API?",
+     [("concepts/services-networking/ingress-controllers",
+       "The Kubernetes project recommends using Gateway instead of\nIngress.",
+       [("concepts/services-networking/gateway",
+         "Gateway API is the successor to the Ingress API.")])],
+     "Gateway API: the project recommends it over Ingress, whose API is frozen."),
+    ("comparison", "What is the difference between a ClusterIP and an ExternalName Service?",
+     [("concepts/services-networking/service",
+       "Exposes the Service on a cluster-internal IP. Choosing this value\n  makes the Service "
+       "only reachable from within the cluster."),
+      ("concepts/services-networking/service",
+       "Maps the Service to the contents of the `externalName` field")],
+     "ClusterIP gives an internal IP reachable only in the cluster; ExternalName just returns a "
+     "DNS CNAME to an external hostname, with no proxying."),
+    ("conceptual", "I created an Ingress but nothing routes traffic. What am I missing?",
+     [("concepts/services-networking/ingress",
+       "You must have an Ingress controller\nto satisfy an Ingress. Only creating an Ingress "
+       "resource has no effect.")],
+     "An Ingress controller; the Ingress resource alone has no effect."),
+    ("multi_hop", "My Job's Pod template doesn't set restartPolicy. Is that valid for a Job?",
+     [("concepts/workloads/controllers/job",
+       "`Job` is *only* appropriate\nfor pods with `RestartPolicy` equal to `OnFailure` or "
+       "`Never`."),
+      ("concepts/workloads/controllers/job",
+       "If `RestartPolicy` is not set, the default value is `Always`.")],
+     "No: unset means Always, but a Job only works with OnFailure or Never, so set one "
+     "explicitly."),
+    ("multi_hop",
+     "With both a startup probe and a liveness probe, when does the liveness probe start and "
+     "what does a later failure do?",
+     [("concepts/workloads/pods/pod-lifecycle",
+       "If a startup probe is configured, Kubernetes does not execute liveness or\nreadiness "
+       "probes until the startup probe succeeds"),
+      ("concepts/workloads/pods/pod-lifecycle",
+       "Liveness probes determine when to restart a container.")],
+     "Only after the startup probe succeeds; after that a liveness failure restarts the "
+     "container."),
+    ("conceptual",
+     "After deleting a PVC whose volume has the Retain policy, can a new claim bind that volume?",
+     [("concepts/storage/persistent-volumes",
+       "When the PersistentVolumeClaim is deleted, the PersistentVolume still exists\nand the "
+       "volume is considered \"released\". But it is not yet available for")],
+     "Not immediately: the volume is released but must be manually reclaimed first."),
+    ("conceptual",
+     "What requests does a Pod without resource settings get in a namespace with a LimitRange?",
+     [("concepts/policy/limit-range",
+       "First, the LimitRange admission controller applies default request and limit values\n  "
+       "for all Pods (and their containers) that do not set compute resource requirements.")],
+     "The LimitRange's default requests and limits are applied to it."),
+    ("unanswerable", "What uptime SLA does the Kubernetes project guarantee for the control plane?",
+     [], "Not answerable: upstream Kubernetes offers no SLA."),
+    ("unanswerable", "How do I configure service autoscaling in Docker Swarm?", [],
+     "Out of scope: Docker Swarm is not covered by the Kubernetes docs."),
+    ("unanswerable", "What is the price of a GKE Autopilot pod per vCPU hour?", [],
+     "Not in the Kubernetes docs."),
+    ("unanswerable",
+     "How many nodes did Google's largest internal Borg cell run in 2019?", [],
+     "Not in the Kubernetes docs."),
+    ("unanswerable", "Which AWS EC2 instance type does EKS recommend for etcd?", [],
+     "Not in the Kubernetes docs."),
+    ("unanswerable", "What is the maximum number of Helm releases allowed per namespace?", [],
+     "Not in the Kubernetes docs: Helm is a separate project."),
+    ("unanswerable", "How do I enable GPU overclocking through the kubelet?", [],
+     "Not answerable: the kubelet has no such feature."),
+    ("unanswerable", "Which Kubernetes version introduced the kubectl `deploy-wizard` command?",
+     [], "Not answerable: kubectl has no deploy-wizard command."),
+    ("unanswerable", "What default username and password does the Kubernetes API server ship with?",
+     [], "Not answerable: the API server does not ship with default credentials."),
+    ("unanswerable", "How do I migrate a Nomad job file to a Kubernetes Deployment?", [],
+     "Not in the Kubernetes docs."),
+    ("unanswerable", "What is the Kubernetes certification exam passing score for CKA in 2026?",
+     [], "Not in the Kubernetes docs."),
 ]
+
 
 def _evidence(doc_id, quote, alternatives=()):
     """Alternatives are the same fact stated on another page; retrieving any one counts."""
@@ -180,7 +302,8 @@ if __name__ == "__main__":
                 "qid": f"h{i:04d}", "question": question, "type": typ,
                 "answerable": typ != "unanswerable",
                 "evidence": [_evidence(*e) for e in evidence],
-                "reference_answer": ref, "origin": "hand", "reviewed": True, "reviewer": REVIEWER,
+                "reference_answer": ref, "origin": "hand", "reviewed": True,
+                "reviewer": "Claude, approved by Abdul" if i <= APPROVED_BY_AUTHOR else "claude",
                 "notes": NOTE,
             }, ensure_ascii=False) + "\n")
     print(f"wrote {len(Q)} questions to {out}")
