@@ -9,3 +9,6 @@ data/raw/
 data/processed/
 indexes/
 runs/
+
+# Unreviewed LLM drafts; only accepted questions are committed (data/eval/questions.jsonl).
+data/eval/candidates.jsonl

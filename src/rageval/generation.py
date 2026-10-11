@@ -46,9 +46,7 @@ class LLM:
                     "options": {"temperature": c.temperature, "num_predict": c.max_tokens}}
             if json_mode:
                 body["format"] = "json"
-            r = requests.post(f"{c.base_url}/api/generate", json=body, timeout=600)
-            r.raise_for_status()
-            data = r.json()
+            data = _post(f"{c.base_url}/api/generate", body)
             text, tin, tout = data["response"], data.get("prompt_eval_count", 0), data.get(
                 "eval_count", 0)
         elif c.provider == "openai_compatible":
@@ -59,10 +57,7 @@ class LLM:
                     "messages": [{"role": "user", "content": prompt}]}
             if json_mode:
                 body["response_format"] = {"type": "json_object"}
-            r = requests.post(f"{c.base_url}/chat/completions", json=body, headers=headers,
-                              timeout=600)
-            r.raise_for_status()
-            data = r.json()
+            data = _post(f"{c.base_url}/chat/completions", body, headers)
             text = data["choices"][0]["message"]["content"]
             usage = data.get("usage", {})
             tin, tout = usage.get("prompt_tokens", 0), usage.get("completion_tokens", 0)
@@ -70,6 +65,23 @@ class LLM:
             raise ValueError(f"unknown provider: {c.provider}")
         cost = tin * c.price_in_per_m / 1e6 + tout * c.price_out_per_m / 1e6
         return LLMResult(text.strip(), time.perf_counter() - t0, tin, tout, cost)
+
+
+def _post(url: str, body: dict, headers: dict | None = None, retries: int = 4) -> dict:
+    """POST with exponential backoff on connection errors and 5xx/429 (e.g. a model reloading)."""
+    for attempt in range(retries + 1):
+        try:
+            r = requests.post(url, json=body, headers=headers, timeout=600)
+            if r.status_code < 500 and r.status_code != 429:
+                r.raise_for_status()
+                return r.json()
+            err: Exception = requests.HTTPError(f"{r.status_code} from {url}: {r.text[:200]}")
+        except requests.ConnectionError as e:
+            err = e
+        if attempt == retries:
+            raise err
+        time.sleep(2 ** (attempt + 1))
+    raise AssertionError("unreachable")
 
 
 def format_context(hits: list[Hit]) -> str:
