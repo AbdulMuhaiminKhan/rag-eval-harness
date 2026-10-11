@@ -1,0 +1,42 @@
+{"qid": "g0001", "accepted": true, "reason": "specific, answer in quote", "reviewer": "claude", "question": "How can I set the `kube-controller-manager` QPS and Burst values for a DRA-enabled cluster with 100 nodes and 720 long-lived pods?"}
+{"qid": "g0002", "accepted": true, "reason": "ok; retyped from comparison", "reviewer": "claude", "question": "How are the status updates for a Kubernetes resource communicated to other components?"}
+{"qid": "g0003", "accepted": false, "reason": "quote covers only restarting the apiserver, not the policy needed", "reviewer": "claude", "question": "How do I grant full API access to the default service account in the kube-system namespace using ABAC?"}
+{"qid": "g0004", "accepted": false, "reason": "quote does not contain the actual steps", "reviewer": "claude", "question": "How do I create a Kubernetes service that exposes both HTTP and HTTPS traffic for my application?"}
+{"qid": "g0005", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What is the default value for `spec.progressDeadlineSeconds` in apps/v1 Deployment after v1.16?"}
+{"qid": "g0006", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What happens to existing Deployments if I switch a ValidatingAdmissionPolicy to Deny mode?"}
+{"qid": "g0007", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I explore the Kubernetes API using a command-line tool?"}
+{"qid": "g0008", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I ensure that pods with specific CPU requirements get exclusive access to certain CPUs?"}
+{"qid": "g0009", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "When should I use manual scaling instead of automatic scaling for a Deployment?"}
+{"qid": "g0010", "accepted": false, "reason": "answer just restates the observation; the cause is elsewhere", "reviewer": "claude", "question": "Why doesn't the StatefulSet wait for a Pod to be Running and Ready before launching the next one?"}
+{"qid": "g0011", "accepted": false, "reason": "API list-parameter boilerplate repeated on every API page", "reviewer": "claude", "question": "How does the 'limit' parameter work in list calls, and what should I expect when using it?"}
+{"qid": "g0012", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What does the `ExecConfig` field in AuthInfo specify, and what does it do?"}
+{"qid": "g0013", "accepted": false, "reason": "quote repeats on several pages (boilerplate)", "reviewer": "claude", "question": "How can I join a node to the Kubernetes cluster without verifying the root CA public key?"}
+{"qid": "g0014", "accepted": true, "reason": "ok; retyped from comparison", "reviewer": "claude", "question": "What happens if an init container fails and the Pod's restart policy is set to Always?"}
+{"qid": "g0015", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How do I create a Pod that uses a ConfigMap to populate a volume?"}
+{"qid": "g0016", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What command can I use to handle Kubernetes certificates?"}
+{"qid": "g0017", "accepted": true, "reason": "ok; retyped", "reviewer": "claude", "question": "How does increasing the value of `concurrentRSSyncs` affect the ReplicaSetController's performance?"}
+{"qid": "g0018", "accepted": false, "reason": "vague question and quote", "reviewer": "claude", "question": "How can I contribute to the Kubernetes documentation?"}
+{"qid": "g0019", "accepted": false, "reason": "kubectl global flag repeated on every kubectl page", "reviewer": "claude", "question": "How can I specify the username for basic authentication when using kubectl?"}
+{"qid": "g0020", "accepted": false, "reason": "quote is only a link title", "reviewer": "claude", "question": "How can I prepare for the removal of dockershim in my Kubernetes cluster?"}
+{"qid": "g0021", "accepted": false, "reason": "flag boilerplate repeated across kubeadm pages", "reviewer": "claude", "question": "What does the --kubeconfig flag do in kubeadm upgrade node phase post-upgrade?"}
+{"qid": "g0022", "accepted": false, "reason": "API list-parameter boilerplate", "reviewer": "claude", "question": "What happens if the 'continue' value is no longer valid in a list request?"}
+{"qid": "g0023", "accepted": false, "reason": "global flag on an unrelated page", "reviewer": "claude", "question": "How long will the storage driver buffer writes before committing them to the database?"}
+{"qid": "g0024", "accepted": false, "reason": "kubectl global flag boilerplate", "reviewer": "claude", "question": "What is the default timeout value for server requests in kubectl_certificate_approve, and how can it be changed?"}
+{"qid": "g0025", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I disable extended tokens for ServiceAccount volumes?"}
+{"qid": "g0026", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I use a variable in an expression within Kubernetes admission webhook validation?"}
+{"qid": "g0027", "accepted": false, "reason": "quote repeats on several pages (boilerplate)", "reviewer": "claude", "question": "Can I use fields other than name and namespace in field selectors for custom resources, and how do I do it?"}
+{"qid": "g0028", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I add a custom entry to the /etc/hosts file for a Pod in Kubernetes?"}
+{"qid": "g0029", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What is the recommended method to secure communication between the Kubernetes control plane and nodes?"}
+{"qid": "g0030", "accepted": true, "reason": "ok; retyped", "reviewer": "claude", "question": "How does the scheduler handle devices that declare no groups when allocating them together with other devices?"}
+{"qid": "g0031", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How do I suggest a new content idea to the Kubernetes documentation team?"}
+{"qid": "g0032", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What happens if the total resource limits of a namespace are less than the sum of the limits requested by the pods?"}
+{"qid": "g0033", "accepted": false, "reason": "generic API operation boilerplate", "reviewer": "claude", "question": "How can I delete a PodCertificateRequest in Kubernetes?"}
+{"qid": "g0034", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I ensure the security of data stored in volumes within my Kubernetes cluster?"}
+{"qid": "g0035", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How do I start the Hugo server to preview the Kubernetes website locally?"}
+{"qid": "g0036", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How many hosts are needed for an HA cluster with the external etcd topology?"}
+{"qid": "g0037", "accepted": false, "reason": "generic command, not specific to the page", "reviewer": "claude", "question": "How can I check which pods are running on specific nodes in a Kubernetes cluster?"}
+{"qid": "g0038", "accepted": false, "reason": "quote is about eligibility, not sponsoring", "reviewer": "claude", "question": "How can I sponsor a new contributor to become a Kubernetes member?"}
+{"qid": "g0039", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "Can I customize the kube-proxy settings in a kubeadm cluster?"}
+{"qid": "g0040", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I ensure that a pod runs on a regular cluster node and won't be evicted even if the node is under high utilization?"}
+{"qid": "g0041", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I configure the kubelet to tolerate swap memory on my node?"}
+{"qid": "g0042", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How long should the response time be for requests between the extension API server and the kube-apiserver to meet the latency requirement?"}

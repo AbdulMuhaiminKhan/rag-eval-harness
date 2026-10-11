@@ -42,6 +42,20 @@ def _overlap(question: str, quote: str) -> float:
     return len(q & src) / len(q) if q else 1.0
 
 
+def pages_containing(docs: dict[str, Document], quote: str, limit: int = 3) -> int:
+    """How many pages contain the quote (stops counting at ``limit``). Boilerplate such as
+    kubectl global flags or API list parameters repeats across hundreds of reference pages,
+    which makes a single gold page meaningless."""
+    probe = " ".join(quote.split())[:120]
+    n = 0
+    for d in docs.values():
+        if probe in " ".join(d.text.split()):
+            n += 1
+            if n >= limit:
+                break
+    return n
+
+
 def _jaccard(a: str, b: str) -> float:
     x, y = set(tokenize(a)), set(tokenize(b))
     return len(x & y) / len(x | y) if x | y else 1.0
@@ -90,6 +104,9 @@ def draft_questions(llm: LLM, docs: dict[str, Document], n: int, seed: int = 0,
             continue
         if _overlap(question, quote) > max_overlap:
             rejected["copies_wording"] += 1
+            continue
+        if pages_containing(docs, quote) > 1:
+            rejected["boilerplate_quote"] += 1
             continue
         if any(_jaccard(question, s) > 0.6 for s in seen):
             rejected["duplicate"] += 1
