@@ -259,6 +259,55 @@ Q = [
        "First, the LimitRange admission controller applies default request and limit values\n  "
        "for all Pods (and their containers) that do not set compute resource requirements.")],
      "The LimitRange's default requests and limits are applied to it."),
+    ("multi_hop",
+     "I drained a node for a kernel upgrade. What happened to the emptyDir data of the evicted "
+     "pods?",
+     [("tasks/administer-cluster/safely-drain-node",
+       "You can use `kubectl drain` to safely evict all of your pods from a\nnode"),
+      ("concepts/storage/volumes",
+       "When a Pod is removed from a node for\nany reason, the data in the `emptyDir` is "
+       "deleted permanently.")],
+     "Drain evicts the pods from the node, and a Pod removed from its node loses its emptyDir "
+     "data permanently."),
+    ("multi_hop",
+     "Secrets aren't encrypted by default. How can I tell whether my API server encrypts them "
+     "at rest?",
+     [("concepts/configuration/secret",
+       "Kubernetes Secrets are, by default, stored unencrypted in the API server's underlying "
+       "data store\n(etcd)."),
+      ("tasks/administer-cluster/encrypt-data",
+       "If you are running the kube-apiserver without the `--encryption-provider-config` "
+       "command line\nargument, you do not have encryption at rest enabled.")],
+     "Check the kube-apiserver flags: without --encryption-provider-config (or with identity as "
+     "the first provider) there is no encryption at rest."),
+    ("multi_hop", "My settings file is 2 MiB. Can I put it in a ConfigMap, and if not what instead?",
+     [("concepts/configuration/configmap",
+       "The data stored in a\nConfigMap cannot exceed 1 MiB. If you need to store settings that "
+       "are\nlarger than this limit, you may want to consider mounting a volume or use a\n"
+       "separate database or file service.")],
+     "No, ConfigMaps are limited to 1 MiB; mount a volume or use a database or file service."),
+    ("multi_hop",
+     "A pod tolerates a NoExecute taint with tolerationSeconds set. Does it keep running "
+     "forever?",
+     [("concepts/scheduling-eviction/taint-and-toleration",
+       "Pods that tolerate the taint with a specified `tolerationSeconds` remain\n    bound for "
+       "the specified amount of time. After that time elapses, the node\n    lifecycle "
+       "controller evicts the Pods from the node.")],
+     "No. It stays only for tolerationSeconds, then the node lifecycle controller evicts it."),
+    ("multi_hop", "Can I upgrade a kubeadm cluster from 1.35 straight to 1.37 with these docs?",
+     [("tasks/administer-cluster/kubeadm/kubeadm-upgrade",
+       "upgrade a Kubernetes cluster created with kubeadm from version\n1.36.x to version 1.37.x")
+      , ("tasks/administer-cluster/kubeadm/kubeadm-upgrade",
+         "Skipping MINOR versions\nwhen upgrading is unsupported.")],
+     "No. The page covers 1.36 to 1.37 and skipping minor versions is unsupported, so go "
+     "1.35 to 1.36 first."),
+    ("multi_hop",
+     "I removed a static Pod's manifest to restart it. How long should I wait before putting "
+     "it back?",
+     [("tasks/administer-cluster/kubeadm/kubeadm-certs",
+       "and wait for 20 seconds (see the `fileCheckFrequency` value in KubeletConfiguration "
+       "struct).")],
+     "About 20 seconds (the kubelet's fileCheckFrequency), then move the file back."),
     ("unanswerable", "What uptime SLA does the Kubernetes project guarantee for the control plane?",
      [], "Not answerable: upstream Kubernetes offers no SLA."),
     ("unanswerable", "How do I configure service autoscaling in Docker Swarm?", [],
@@ -296,7 +345,10 @@ def _evidence(doc_id, quote, alternatives=()):
 if __name__ == "__main__":
     out = Path("data/eval/questions.jsonl")
     out.parent.mkdir(parents=True, exist_ok=True)
-    with out.open("w", encoding="utf-8") as f:
+    # Rewrite only the hand-written questions; keep reviewed LLM drafts that follow them.
+    drafted = [line for line in out.read_text(encoding="utf-8").splitlines()
+               if line.strip() and json.loads(line)["origin"] != "hand"] if out.exists() else []
+    with out.open("w", encoding="utf-8", newline="\n") as f:
         for i, (typ, question, evidence, ref) in enumerate(Q, start=1):
             f.write(json.dumps({
                 "qid": f"h{i:04d}", "question": question, "type": typ,
@@ -306,4 +358,5 @@ if __name__ == "__main__":
                 "reviewer": "Claude, approved by Abdul" if i <= APPROVED_BY_AUTHOR else "claude",
                 "notes": NOTE,
             }, ensure_ascii=False) + "\n")
-    print(f"wrote {len(Q)} questions to {out}")
+        f.writelines(line + "\n" for line in drafted)
+    print(f"wrote {len(Q)} hand-written + {len(drafted)} reviewed drafts to {out}")

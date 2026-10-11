@@ -40,3 +40,132 @@
 {"qid": "g0040", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I ensure that a pod runs on a regular cluster node and won't be evicted even if the node is under high utilization?"}
 {"qid": "g0041", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I configure the kubelet to tolerate swap memory on my node?"}
 {"qid": "g0042", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How long should the response time be for requests between the extension API server and the kube-apiserver to meet the latency requirement?"}
+{"qid": "g0043", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What types of probes can be used to check the status of a container in Kubernetes?"}
+{"qid": "g0044", "accepted": false, "reason": "quote does not say how long", "reviewer": "claude", "question": "How long does the endpoint for the old pod stay in the terminating state after a new pod is deployed?"}
+{"qid": "g0045", "accepted": false, "reason": "kubectl boilerplate", "reviewer": "claude", "question": "How can I disable the kuberc file preference in kubectl?"}
+{"qid": "g0046", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How does setting the externalTrafficPolicy to Cluster differ from setting it to Local?"}
+{"qid": "g0047", "accepted": false, "reason": "quote is about disk-backed volumes, question about memory-backed", "reviewer": "claude", "question": "Can I resize a memory-backed emptyDir volume in-place on a node running cgroup v1?"}
+{"qid": "g0048", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What is the difference between CSI and FlexVolume storage plugins in Kubernetes?"}
+{"qid": "g0049", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What does the 'Info' section in a node status tell us about the node?"}
+{"qid": "g0050", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I debug a StatefulSet when some of its pods are stuck in Unknown or Terminating state?"}
+{"qid": "g0051", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "Why can't I update the role in a ClusterRoleBinding after it has been created?"}
+{"qid": "g0052", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How does a CompositePodGroup differ from a PodGroup in terms of containing pods?"}
+{"qid": "g0053", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I ensure the kubelet process gets enough CPU time on a Windows node?"}
+{"qid": "g0054", "accepted": false, "reason": "question refers to 'the passage'", "reviewer": "claude", "question": "When should I close an issue according to the passage?"}
+{"qid": "g0055", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I check if a Job has completed successfully using kubectl?"}
+{"qid": "g0056", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "Can I use different patch types when customizing the control plane components?"}
+{"qid": "g0057", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I access a Kubernetes cluster that is not exposed on the public internet?"}
+{"qid": "g0058", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I set up a cluster that resembles a production environment?"}
+{"qid": "g0059", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What does the kubeadm config print join-defaults command do?"}
+{"qid": "g0060", "accepted": false, "reason": "quote does not answer which metric to check", "reviewer": "claude", "question": "What metric should I check to understand the current concurrency limit for the API server?"}
+{"qid": "g0061", "accepted": false, "reason": "obscure Go code snippet", "reviewer": "claude", "question": "How do I create a new PodGroup from an existing Workload in Kubernetes without recompiling the Workload?"}
+{"qid": "g0062", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I ensure that the client's source IP is preserved when accessing a Kubernetes Service from outside the cluster?"}
+{"qid": "g0063", "accepted": false, "reason": "flag boilerplate repeated across many flags", "reviewer": "claude", "question": "How does the --config parameter affect the --cluster-cidr parameter in kube-proxy?"}
+{"qid": "g0064", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "In which namespace can pods run as privileged even when Pod Security Standards are enforced?"}
+{"qid": "g0065", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I verify the contents of a projected volume in a Kubernetes Pod?"}
+{"qid": "g0066", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What kind of values can the `resource.kubernetes.io/numaNode` attribute have?"}
+{"qid": "g0067", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What are the valid operators for a LabelSelectorRequirement and what do they do?"}
+{"qid": "g0068", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "Why might the status of a pod show a slight delay when checked with kubectl compared to the actual state on the node?"}
+{"qid": "g0069", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How do I enable support for hostPort in my CNI configuration?"}
+{"qid": "g0070", "accepted": false, "reason": "vague question", "reviewer": "claude", "question": "How are environment variables in a Pod defined using container-specific fields?"}
+{"qid": "g0071", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I prevent new pods from being scheduled on a specific node in Kubernetes?"}
+{"qid": "g0072", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I ensure my pods are distributed across multiple availability zones?"}
+{"qid": "g0073", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How do I generate a local preview of the Configuration API reference documentation?"}
+{"qid": "g0074", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "Can I set custom thresholds for 'containerfs' and if not, what happens when I try?"}
+{"qid": "g0075", "accepted": false, "reason": "vague question and list answer", "reviewer": "claude", "question": "What should I consider when setting up nodes for my Kubernetes cluster?"}
+{"qid": "g0076", "accepted": false, "reason": "community channels, not a docs question", "reviewer": "claude", "question": "How can I find support in my local language for Kubernetes?"}
+{"qid": "g0077", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How do I get involved in writing post-release comms for a new Kubernetes version?"}
+{"qid": "g0078", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I trigger a graceful pod termination using the Eviction API?"}
+{"qid": "g0079", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I set an environment variable for a container in a Kubernetes Pod?"}
+{"qid": "g0080", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How do I claim specific devices for my Kubernetes Pods using DRA?"}
+{"qid": "g0081", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How do I create a DeviceClass in my Kubernetes cluster for a GPU device using the driver.example.com driver?"}
+{"qid": "g0082", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What should I do if I downgrade a 1.36 kubelet after using PodLevelResourceManagers?"}
+{"qid": "g0083", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "When should I enforce systemReserved reservations?"}
+{"qid": "g0084", "accepted": false, "reason": "quote does not match the question", "reviewer": "claude", "question": "What might cause pods to get stuck in the pending state on Kubernetes nodes?"}
+{"qid": "g0085", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I enable event-based container stage change monitoring in the kubelet?"}
+{"qid": "g0086", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What is the difference between a voluntary and an involuntary disruption in Kubernetes?"}
+{"qid": "g0087", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What are the differences between the event-based PLEG and the generic PLEG?"}
+{"qid": "g0088", "accepted": false, "reason": "truncated quote", "reviewer": "claude", "question": "When should unhealthy pods be evicted according to the IfHealthyBudget policy?"}
+{"qid": "g0089", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How do I clean up the persistent volume claims and volumes after using StatefulSets in this tutorial?"}
+{"qid": "g0090", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How does setting the internal traffic policy to Local affect pods on nodes without endpoints for a given Service?"}
+{"qid": "g0091", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What is the process called when a lower-priority Pod is terminated to allow a higher-priority Pod to run on a Node?"}
+{"qid": "g0092", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "Where is the KubeConfig file for the kubelet stored in a typical Kubernetes setup?"}
+{"qid": "g0093", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How do I configure the scheduler in Kubernetes versions before v1.23?"}
+{"qid": "g0094", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How do I change a PersistentVolume's reclaim policy to Retain?"}
+{"qid": "g0095", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I exempt a specific resource from being encrypted even though I have a wildcard set for the entire group?"}
+{"qid": "g0096", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "Do I need to use WSL on Windows to develop Kubernetes documentation?"}
+{"qid": "g0097", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How do I enable network policy support when creating a GKE cluster with Calico?"}
+{"qid": "g0098", "accepted": false, "reason": "quote does not answer when to use it", "reviewer": "claude", "question": "When should I use the GenerateName field instead of just providing a Name for my Kubernetes resource?"}
+{"qid": "g0099", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How do I enable kubectl auto-completion in PowerShell every time I start a new session?"}
+{"qid": "g0100", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How are CPUs reserved for kubelet in a Kubernetes cluster with the static policy enabled?"}
+{"qid": "g0101", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What does API-initiated eviction mean in Kubernetes?"}
+{"qid": "g0102", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I upgrade my Kubernetes cluster to a newer version using kubeadm?"}
+{"qid": "g0103", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I set up a SOCKS5 proxy to access the Kubernetes API server from my local machine?"}
+{"qid": "g0104", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What should I set the `.spec.ipFamilyPolicy` field to for a dual-stack load balancer?"}
+{"qid": "g0105", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What conditions must be met for the CSIMigrationAzureFileComplete feature gate to be enabled?"}
+{"qid": "g0106", "accepted": false, "reason": "quote does not answer how to configure", "reviewer": "claude", "question": "How can I configure a TTL for a Job that has already finished?"}
+{"qid": "g0107", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What happens if I set the externalTrafficPolicy to Local on a service running on GKE/GCE?"}
+{"qid": "g0108", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How do I set the canonical URL for a mirrored article in Kubernetes?"}
+{"qid": "g0109", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How do I enable autocompletion for kubectl commands in Bash?"}
+{"qid": "g0110", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How does kube-proxy handle network communication to my Pods?"}
+{"qid": "g0111", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I see the differences between the current static pod manifests and the new version without applying the changes?"}
+{"qid": "g0112", "accepted": false, "reason": "truncated quote", "reviewer": "claude", "question": "How can I revert a deployment to a previous version?"}
+{"qid": "g0113", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What should the value of --cgroup-driver be set to for the kubelet to work properly with the container runtime?"}
+{"qid": "g0114", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How does Kubernetes decide which path to use when multiple paths match a request in an Ingress?"}
+{"qid": "g0115", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What happens if I delete a PersistentVolumeClaim that is currently being used as a snapshot source?"}
+{"qid": "g0116", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How does the PodResources API differ when PodLevelResourceManagers is enabled compared to when it is not?"}
+{"qid": "g0117", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What is the purpose of Cluster API?"}
+{"qid": "g0118", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "Where are the checkpoint files for the Device Manager stored?"}
+{"qid": "g0119", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How does the CSIMigrationAzureFileComplete feature gate differ from the InTreePluginAzureFileUnregister feature gate in terms of functionality?"}
+{"qid": "g0120", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I ensure that my StatefulSet replicas are distributed across different zones to improve availability?"}
+{"qid": "g0121", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I add my localization team to the Kubernetes GitHub organization?"}
+{"qid": "g0122", "accepted": false, "reason": "truncated quote", "reviewer": "claude", "question": "How can I allow Pods to request special storage in Kubernetes?"}
+{"qid": "g0123", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I verify that all Pods are running the latest version after an update?"}
+{"qid": "g0124", "accepted": false, "reason": "quote does not answer the comparison", "reviewer": "claude", "question": "How does Kubernetes handle pod evictions during network partitions compared to node unavailability?"}
+{"qid": "g0125", "accepted": false, "reason": "refers to 'the example'", "reviewer": "claude", "question": "How much memory is allocated per Pod for an XPU device in the example?"}
+{"qid": "g0126", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I change the flags for the control plane components when setting up a cluster with kubeadm?"}
+{"qid": "g0127", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What is the difference between a load balancer that uses an agreed protocol and one that uses a packet forwarder?"}
+{"qid": "g0128", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "Can I set resource limits for addon components like a logging component in Kubernetes?"}
+{"qid": "g0129", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What should I consider for sensitive workloads in Kubernetes?"}
+{"qid": "g0130", "accepted": false, "reason": "obscure, quote is a fragment", "reviewer": "claude", "question": "How does the TopologyPlacement plugin handle workload placements when using CompositePodGroup hierarchies?"}
+{"qid": "g0131", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I set resource limits for a container in a local file without hitting the server?"}
+{"qid": "g0132", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What happens if I try to use a newer version of a control plane component to emulate an older version of Kubernetes?"}
+{"qid": "g0133", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I filter Kubernetes events to only show events related to a specific resource type?"}
+{"qid": "g0134", "accepted": false, "reason": "vague", "reviewer": "claude", "question": "How can I help with PRs that don't involve localization changes?"}
+{"qid": "g0135", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I see the details of a specific revision using kubectl rollout history?"}
+{"qid": "g0136", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "When will Kubernetes serve list requests directly from the watch cache instead of etcd?"}
+{"qid": "g0137", "accepted": false, "reason": "vague, quote is a link title", "reviewer": "claude", "question": "What are the different steps I can take to contribute to the Kubernetes documentation?"}
+{"qid": "g0138", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "Can a pod use credentials from different imagePullSecrets to pull images from multiple registries?"}
+{"qid": "g0139", "accepted": false, "reason": "quote does not answer how to start", "reviewer": "claude", "question": "How should I start localizing the Kubernetes documentation into a new language?"}
+{"qid": "g0140", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How do I update a Secret using kustomize?"}
+{"qid": "g0141", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I ensure that my Windows Pods are scheduled on Windows nodes?"}
+{"qid": "g0142", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What is the required field in a ResourceClaim for a DRA example?"}
+{"qid": "g0143", "accepted": false, "reason": "near-duplicate of an accepted question", "reviewer": "claude", "question": "What do I need to set up my development environment for contributing to Kubernetes?"}
+{"qid": "g0144", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I deploy a canary version of my application and route 25% of the traffic to it?"}
+{"qid": "g0145", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What should I do after successfully using kubectl drain to safely evict all my pods from a node?"}
+{"qid": "g0146", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "Can the labels in the ReplicationController's metadata be different from the labels in its pod template's metadata?"}
+{"qid": "g0147", "accepted": false, "reason": "trivial tutorial cleanup step", "reviewer": "claude", "question": "How do I delete the namespace used for testing quotas?"}
+{"qid": "g0148", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I ensure that data persists even if the container is restarted?"}
+{"qid": "g0149", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How do I configure the Memory Manager in the kubelet?"}
+{"qid": "g0150", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What does a LimitRange do in Kubernetes?"}
+{"qid": "g0151", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I customize the kubelet configuration for my Kubernetes cluster using kubeadm?"}
+{"qid": "g0152", "accepted": false, "reason": "quote does not answer the question", "reviewer": "claude", "question": "How can I check if kube-proxy is correctly setting up the virtual servers for my service endpoints?"}
+{"qid": "g0153", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What is the primary way to run applications on a Kubernetes cluster, and what kind of applications is it suitable for?"}
+{"qid": "g0154", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How does Kubernetes determine which IP addresses to use for networking within the cluster?"}
+{"qid": "g0155", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How does Kubernetes handle the deletion of objects by default when I don't use the --cascade flag?"}
+{"qid": "g0156", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How does the `baseline` policy differ from the `restricted` policy in terms of pod enforcement?"}
+{"qid": "g0157", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What does the ReplicationController do to ensure the desired number of pods are running?"}
+{"qid": "g0158", "accepted": false, "reason": "near-duplicate of an accepted question", "reviewer": "claude", "question": "How can I enable kubectl autocompletion in PowerShell?"}
+{"qid": "g0159", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "Why should I specify both liveness and readiness probes for a ZooKeeper server even though they are identical?"}
+{"qid": "g0160", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "Can I use subpath volume mounts for Windows containers?"}
+{"qid": "g0161", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I ensure that my customizations are preserved during a kubeadm upgrade?"}
+{"qid": "g0162", "accepted": false, "reason": "refers to 'this context'", "reviewer": "claude", "question": "What is the purpose of creating a PriorityClass in this context?"}
+{"qid": "g0163", "accepted": false, "reason": "quote is only a link", "reviewer": "claude", "question": "How do I set up a Kubernetes cluster with Windows nodes?"}
+{"qid": "g0164", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How often does Kubernetes send spans to the exporter if I set the samplingRatePerMillion to 1000000?"}
+{"qid": "g0165", "accepted": false, "reason": "quote does not answer the question", "reviewer": "claude", "question": "How can I stop watching a running job and check the status of the cron job that scheduled it?"}
+{"qid": "g0166", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What does the `fieldPath` field in an `ObjectReference` do?"}
+{"qid": "g0167", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What range of values can a PriorityClass have, and what does a higher value indicate?"}
+{"qid": "g0168", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How should I test my mutating webhook to ensure it doesn't violate existing validations?"}
+{"qid": "g0169", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How do I enable leader election for my custom scheduler in Kubernetes?"}
+{"qid": "g0170", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "How can I configure kubectl to use a SOCKS5 proxy to access the Kubernetes API server?"}
+{"qid": "g0171", "accepted": true, "reason": "ok", "reviewer": "claude", "question": "What is the main difference between StatefulSet and Deployment in Kubernetes?"}
