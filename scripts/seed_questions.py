@@ -7,7 +7,8 @@ copied verbatim from the cleaned corpus; `rageval validate` checks that.
 import json
 from pathlib import Path
 
-NOTE = "Seed question drafted against the docs; needs human review."
+REVIEWER = "Claude, set approved by Abdul"
+NOTE = "Seed question drafted against the docs; evidence re-checked and set approved by the author."
 
 Q = [
     ("factoid", "What is the maximum size of data a ConfigMap can hold?",
@@ -22,7 +23,10 @@ Q = [
     ("conceptual", "Are Kubernetes Secrets encrypted at rest by default?",
      [("concepts/configuration/secret",
        "Kubernetes Secrets are, by default, stored unencrypted in the API server's underlying "
-       "data store\n(etcd).")],
+       "data store\n(etcd).",
+       [("tasks/administer-cluster/encrypt-data",
+         "If you are running the kube-apiserver without the `--encryption-provider-config` "
+         "command line\nargument, you do not have encryption at rest enabled.")])],
      "No. By default they are stored unencrypted in etcd."),
     ("procedural",
      "How do I put plain text values in a Secret manifest without base64-encoding them myself?",
@@ -41,8 +45,13 @@ Q = [
      "30000-32767, set by --service-node-port-range."),
     ("factoid", "What is the default maxUnavailable for a Deployment rolling update?",
      [("concepts/workloads/controllers/deployment",
-       "This depends on the rollingUpdate parameters (`maxUnavailable` specifically) that you "
-       "have specified. Kubernetes by default sets the value to 25%.")],
+       "By default,\n  it ensures that at least 75% of the desired number of Pods are up "
+       "(25% max unavailable).",
+       [("concepts/workloads/controllers/deployment",
+         "This depends on the rollingUpdate parameters (`maxUnavailable` specifically) that you "
+         "have specified. Kubernetes by default sets the value to 25%."),
+        ("reference/kubernetes-api/apps/deployment-v1",
+         "This can not be 0 if MaxSurge is 0. Defaults to 25%.")])],
      "25%."),
     ("conceptual", "If no NetworkPolicy selects a pod, which inbound connections are allowed?",
      [("concepts/services-networking/network-policies",
@@ -121,7 +130,8 @@ Q = [
     ("procedural", "Why can't I delete a static Pod with kubectl, and how do I restart one?",
      [("tasks/administer-cluster/kubeadm/kubeadm-certs",
        "Static Pods are managed by the local kubelet\nand not by the API Server, thus kubectl "
-       "cannot be used to delete and restart them.")],
+       "cannot be used to delete and restart them.\nTo restart a static Pod you can temporarily "
+       "remove its manifest file from `/etc/kubernetes/manifests/`")],
      "They are managed by the local kubelet, not the API server; restart one by temporarily "
      "removing its manifest from the static pod directory."),
     ("factoid", "How often does the Horizontal Pod Autoscaler check metrics by default?",
@@ -153,6 +163,14 @@ Q = [
      "Not answerable: Helm is not part of Kubernetes releases."),
 ]
 
+def _evidence(doc_id, quote, alternatives=()):
+    """Alternatives are the same fact stated on another page; retrieving any one counts."""
+    e = {"doc_id": doc_id, "quote": quote}
+    if alternatives:
+        e["alternatives"] = [{"doc_id": d, "quote": q} for d, q in alternatives]
+    return e
+
+
 if __name__ == "__main__":
     out = Path("data/eval/questions.jsonl")
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -161,7 +179,8 @@ if __name__ == "__main__":
             f.write(json.dumps({
                 "qid": f"h{i:04d}", "question": question, "type": typ,
                 "answerable": typ != "unanswerable",
-                "evidence": [{"doc_id": d, "quote": s} for d, s in evidence],
-                "reference_answer": ref, "origin": "hand", "reviewed": False, "notes": NOTE,
+                "evidence": [_evidence(*e) for e in evidence],
+                "reference_answer": ref, "origin": "hand", "reviewed": True, "reviewer": REVIEWER,
+                "notes": NOTE,
             }, ensure_ascii=False) + "\n")
     print(f"wrote {len(Q)} questions to {out}")

@@ -47,7 +47,7 @@ def sample_corpus(questions: str = DEFAULT_QUESTIONS, corpus: str = "data/proces
     """Write a small corpus (gold docs + seeded random distractors) for fast CI runs."""
     docs = load_corpus(Path(corpus))
     qs, _ = load_questions(Path(questions), docs, strict=False)
-    gold = {e.doc_id for q in qs for e in q.evidence}
+    gold = {s.doc_id for q in qs for e in q.evidence for s in e.spans()}
     rest = sorted(set(docs) - gold)
     keep = gold | set(random.Random(seed).sample(rest, min(distractors, len(rest))))
     with open(corpus, encoding="utf-8") as fin, open(out, "w", encoding="utf-8") as fout:
@@ -142,15 +142,19 @@ def gen_questions(n: int = 50, out: str = "data/eval/candidates.jsonl", seed: in
     from .qgen import draft_questions
 
     existing = Path(out).read_text(encoding="utf-8").splitlines() if Path(out).exists() else []
+    prior = [json.loads(x)["question"] for path in (out, DEFAULT_QUESTIONS) if Path(path).exists()
+             for x in Path(path).read_text(encoding="utf-8").splitlines() if x.strip()]
     llm = LLM(GenerationConfig(model=model, temperature=0.7))
-    drafts = draft_questions(llm, load_corpus(Path(corpus)), n, seed, len(existing) + 1)
+    drafts, rejected = draft_questions(llm, load_corpus(Path(corpus)), n, seed,
+                                       len(existing) + 1, existing=prior)
     with open(out, "a", encoding="utf-8") as f:
         f.writelines(json.dumps(q.to_dict(), ensure_ascii=False) + "\n" for q in drafts)
-    typer.echo(f"appended {len(drafts)} drafts to {out}")
+    typer.echo(f"appended {len(drafts)} drafts to {out}; rejected: {rejected}")
 
 
 @app.command()
-def review(candidates: str = "data/eval/candidates.jsonl", questions: str = DEFAULT_QUESTIONS):
+def review(candidates: str = "data/eval/candidates.jsonl", questions: str = DEFAULT_QUESTIONS,
+           reviewer: str = typer.Option(..., help="your name, recorded on accepted questions")):
     """Interactively accept, edit or reject drafted questions."""
     lines = Path(candidates).read_text(encoding="utf-8").splitlines()
     done = set()
@@ -174,7 +178,7 @@ def review(candidates: str = "data/eval/candidates.jsonl", questions: str = DEFA
                 q.question = typer.prompt("question", default=q.question)
                 q.reference_answer = typer.prompt("answer", default=q.reference_answer)
                 q.type = typer.prompt("type", default=q.type)
-            q.reviewed = True
+            q.reviewed, q.reviewer = True, reviewer
             with open(questions, "a", encoding="utf-8") as f:
                 f.write(json.dumps(q.to_dict(), ensure_ascii=False) + "\n")
         elif choice == "s":

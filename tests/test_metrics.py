@@ -63,3 +63,10 @@ def test_find_span_tolerates_whitespace():
 def test_kappa():
     assert cohens_kappa([1, 0, 1, 0], [1, 0, 1, 0]) == 1.0
     assert cohens_kappa([1, 1, 0, 0], [1, 0, 1, 0]) == 0.0
+
+
+def test_alternative_span_counts_as_covered():
+    gold = Evidence("a", "", 0, 100, alternatives=[Evidence("b", "", 200, 260)])
+    assert covers(ch("b", 180, 280), gold)
+    s = retrieval_scores([ch("b", 180, 280)], [gold], ks=(1,))
+    assert s["recall@1"] == 1.0 and s["doc_recall@1"] == 1.0

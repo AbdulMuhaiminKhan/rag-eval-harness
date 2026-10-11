@@ -16,13 +16,18 @@ from .chunking import Chunk
 from .dataset import Evidence
 
 
-def covers(chunk: Chunk, ev: Evidence, min_overlap: float = 0.5) -> bool:
+def _covers_span(chunk: Chunk, ev: Evidence, min_overlap: float) -> bool:
     if chunk.doc_id != ev.doc_id:
         return False
     overlap = min(chunk.end, ev.end) - max(chunk.start, ev.start)
     if overlap <= 0:
         return False
     return overlap / min(chunk.end - chunk.start, ev.end - ev.start) >= min_overlap
+
+
+def covers(chunk: Chunk, ev: Evidence, min_overlap: float = 0.5) -> bool:
+    """True if the chunk covers the gold span or any of its equivalent alternatives."""
+    return any(_covers_span(chunk, s, min_overlap) for s in ev.spans())
 
 
 def gains(ranked: Sequence[Chunk], evidence: Sequence[Evidence], min_overlap: float = 0.5
@@ -59,9 +64,10 @@ def ndcg_at_k(g: Sequence[int], n_gold: int, k: int) -> float:
 
 
 def doc_recall_at_k(ranked: Sequence[Chunk], evidence: Sequence[Evidence], k: int) -> float:
-    gold = {e.doc_id for e in evidence}
+    """Fraction of evidence items with at least one acceptable source page in the top k."""
     got = {c.doc_id for c in ranked[:k]}
-    return len(gold & got) / len(gold) if gold else 0.0
+    hit = [any(s.doc_id in got for s in e.spans()) for e in evidence]
+    return sum(hit) / len(hit) if hit else 0.0
 
 
 def retrieval_scores(ranked: Sequence[Chunk], evidence: Sequence[Evidence],
