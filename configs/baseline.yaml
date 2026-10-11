@@ -1,0 +1,17 @@
+# Baseline: fixed-size chunks, dense retrieval with a small local embedder, no reranker.
+name: baseline
+corpus: data/processed/corpus.jsonl
+chunking:
+  strategy: fixed
+  params: {size: 1000, overlap: 150}
+retrieval:
+  retriever: dense
+  embedding_model: sentence-transformers/all-MiniLM-L6-v2
+  candidates: 50
+  top_k: 10
+rerank:
+  model: null
+generation:
+  provider: ollama
+  model: qwen2.5:7b
+  context_k: 5

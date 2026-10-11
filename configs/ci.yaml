@@ -1,0 +1,14 @@
+# The pipeline CI guards. Runs against data/processed/corpus_ci.jsonl (see `rageval sample-corpus`).
+# Update ci/baseline.json with `python scripts/update_ci_baseline.py` when a change is meant to move it.
+name: ci
+corpus: data/processed/corpus_ci.jsonl
+chunking:
+  strategy: fixed
+  params: {size: 1000, overlap: 150}
+retrieval:
+  retriever: hybrid
+  embedding_model: sentence-transformers/all-MiniLM-L6-v2
+  candidates: 50
+  top_k: 10
+rerank:
+  model: null

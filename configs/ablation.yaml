@@ -1,0 +1,25 @@
+# Full ablation grid: chunking x retriever x reranker x embedding model (2 x 3 x 2 x 2 = 24 runs).
+# BM25 ignores the embedding axis, so those cells repeat; they still cost little to run.
+base:
+  corpus: data/processed/corpus.jsonl
+  retrieval: {candidates: 50, top_k: 10}
+  generation: {provider: ollama, model: qwen2.5:7b, context_k: 5}
+
+axes:
+  chunking:
+    - name: fixed
+      set: {chunking.strategy: fixed, chunking.params: {size: 1000, overlap: 150}}
+    - name: semantic
+      set:
+        chunking.strategy: semantic
+        chunking.params: {breakpoint_percentile: 85, min_size: 300, max_size: 1500}
+  retriever:
+    - {name: dense, set: {retrieval.retriever: dense}}
+    - {name: bm25, set: {retrieval.retriever: bm25}}
+    - {name: hybrid, set: {retrieval.retriever: hybrid}}
+  rerank:
+    - {name: norerank, set: {rerank.model: null}}
+    - {name: ce, set: {rerank.model: cross-encoder/ms-marco-MiniLM-L-6-v2}}
+  embedding:
+    - {name: minilm, set: {retrieval.embedding_model: sentence-transformers/all-MiniLM-L6-v2}}
+    - {name: bge-small, set: {retrieval.embedding_model: BAAI/bge-small-en-v1.5}}

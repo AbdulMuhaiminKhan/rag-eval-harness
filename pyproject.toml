@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rageval"
+version = "0.1.0"
+description = "A retrieval-augmented generation pipeline with a reproducible evaluation harness."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "chromadb>=0.5",
+  "sentence-transformers>=3.0",
+  "rank-bm25>=0.2.2",
+  "numpy>=1.26",
+  "pyyaml>=6.0",
+  "requests>=2.31",
+  "typer>=0.12",
+  "tqdm>=4.66",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.5"]
+report = ["matplotlib>=3.8", "pandas>=2.1"]
+
+[project.scripts]
+rageval = "rageval.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["B905"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
