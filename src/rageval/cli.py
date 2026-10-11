@@ -50,7 +50,7 @@ def sample_corpus(questions: str = DEFAULT_QUESTIONS, corpus: str = "data/proces
     gold = {s.doc_id for q in qs for e in q.evidence for s in e.spans()}
     rest = sorted(set(docs) - gold)
     keep = gold | set(random.Random(seed).sample(rest, min(distractors, len(rest))))
-    with open(corpus, encoding="utf-8") as fin, open(out, "w", encoding="utf-8") as fout:
+    with open(corpus, encoding="utf-8") as fin, open(out, "w", encoding="utf-8", newline="\n") as fout:
         for line in fin:
             if json.loads(line)["doc_id"] in keep:
                 fout.write(line)
@@ -148,7 +148,7 @@ def gen_questions(n: int = 50, out: str = "data/eval/candidates.jsonl", seed: in
     # Draft ids must never be reused, including ids of drafts that were already rejected.
     next_id = max((int(r["qid"][1:]) for r in records if r["qid"].startswith("g")), default=0) + 1
     llm = LLM(GenerationConfig(model=model, temperature=0.7))
-    with open(out, "a", encoding="utf-8") as f:
+    with open(out, "a", encoding="utf-8", newline="\n") as f:
 
         def save(q: Question) -> None:
             f.write(json.dumps(q.to_dict(), ensure_ascii=False) + "\n")
@@ -187,7 +187,7 @@ def review(candidates: str = "data/eval/candidates.jsonl", questions: str = DEFA
                 q.reference_answer = typer.prompt("answer", default=q.reference_answer)
                 q.type = typer.prompt("type", default=q.type)
             q.reviewed, q.reviewer = True, reviewer
-            with open(questions, "a", encoding="utf-8") as f:
+            with open(questions, "a", encoding="utf-8", newline="\n") as f:
                 f.write(json.dumps(q.to_dict(), ensure_ascii=False) + "\n")
         elif choice == "s":
             remaining.append(line)
@@ -200,6 +200,12 @@ def gate(run: str = "runs/ci", baseline: str = "ci/baseline.json", max_drop: flo
     """Fail (exit 1) if any gated metric dropped more than max_drop below the baseline."""
     s = json.loads((Path(run) / "summary.json").read_text(encoding="utf-8"))
     b = json.loads(Path(baseline).read_text(encoding="utf-8"))
+    stale = [k for k, v in b.get("fingerprint", {}).items() if s.get("fingerprint", {}).get(k) != v]
+    if stale or "fingerprint" not in b:
+        typer.echo(f"STALE baseline: {', '.join(stale) or 'no fingerprint'} changed since "
+                   f"{baseline} was made, so the numbers are not comparable. If the change is "
+                   "intended, regenerate it with scripts/update_ci_baseline.py in the same PR.")
+        raise typer.Exit(2)
     failed = False
     for m, base in b["metrics"].items():
         cur = s["metrics"][m]["mean"]

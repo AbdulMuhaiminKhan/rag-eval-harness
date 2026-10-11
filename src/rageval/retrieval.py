@@ -44,7 +44,7 @@ def load_or_build_chunks(cfg: Config) -> list[Chunk]:
         embed = Embedder(cfg.chunking.breakpoint_model).embed_docs
     chunks = chunk_corpus(docs, cfg.chunking.strategy, cfg.chunking.params, embed)
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as f:
+    with path.open("w", encoding="utf-8", newline="\n") as f:
         for c in chunks:
             f.write(json.dumps(asdict(c), ensure_ascii=False) + "\n")
     return chunks

@@ -146,7 +146,8 @@ def build_corpus(raw_dir: Path, out_dir: Path, ref: str = "main", min_chars: int
     version = site_version(raw_dir / "kubernetes-website")
     docs_root = raw_dir / "kubernetes-website" / DOCS_SUBDIR
     docs: list[Document] = []
-    for path in sorted(docs_root.rglob("*.md")):
+    # Sort by POSIX path string: Path ordering is case-insensitive on Windows only.
+    for path in sorted(docs_root.rglob("*.md"), key=lambda p: p.relative_to(docs_root).as_posix()):
         meta, text = clean_markdown(path.read_text(encoding="utf-8", errors="replace"), version)
         if meta.get("draft") or len(text) < min_chars:
             continue
@@ -156,7 +157,7 @@ def build_corpus(raw_dir: Path, out_dir: Path, ref: str = "main", min_chars: int
 
     out_dir.mkdir(parents=True, exist_ok=True)
     corpus_path = out_dir / "corpus.jsonl"
-    with corpus_path.open("w", encoding="utf-8") as f:
+    with corpus_path.open("w", encoding="utf-8", newline="\n") as f:
         for d in docs:
             f.write(json.dumps(asdict(d), ensure_ascii=False) + "\n")
     manifest = {

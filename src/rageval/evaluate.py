@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import time
 from collections import defaultdict
@@ -57,12 +58,31 @@ def run_eval(cfg: Config, questions: list[Question], out_dir: Path, generate: bo
     summary["config"] = asdict(cfg)
     summary["index_build_s"] = build_s
     summary["num_chunks"] = len(retriever.chunks)
+    summary["fingerprint"] = fingerprint(cfg, questions)
     out_dir.mkdir(parents=True, exist_ok=True)
-    with (out_dir / "per_question.jsonl").open("w", encoding="utf-8") as f:
+    with (out_dir / "per_question.jsonl").open("w", encoding="utf-8", newline="\n") as f:
         for r in rows:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     return summary
+
+
+def _sha(text: str) -> str:
+    return hashlib.sha1(text.encode("utf-8")).hexdigest()[:12]
+
+
+def fingerprint(cfg: Config, questions: list[Question]) -> dict:
+    """What a run's numbers depend on, independent of OS line endings and file order. Two runs
+    are only comparable (e.g. by the CI gate) when their fingerprints match."""
+    corpus_lines = sorted(Path(cfg.corpus).read_text(encoding="utf-8").splitlines())
+    pipeline = {"chunking": asdict(cfg.chunking), "retrieval": asdict(cfg.retrieval),
+                "rerank": asdict(cfg.rerank)}
+    return {
+        "questions": _sha(json.dumps(sorted((q.to_dict() for q in questions),
+                                            key=lambda d: d["qid"]), sort_keys=True)),
+        "corpus": _sha("\n".join(corpus_lines)),
+        "pipeline": _sha(json.dumps(pipeline, sort_keys=True)),
+    }
 
 
 def _ci(values: list[float]) -> dict:

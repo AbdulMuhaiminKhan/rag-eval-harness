@@ -1,9 +1,14 @@
 {
-  "num_questions": 30,
-  "num_chunks": 4321,
+  "num_questions": 80,
+  "num_chunks": 5313,
+  "fingerprint": {
+    "questions": "6d386b7318a6",
+    "corpus": "b9263ed14721",
+    "pipeline": "a51652c2793b"
+  },
   "metrics": {
-    "recall@5": 0.8269,
-    "mrr@10": 0.5944,
-    "ndcg@10": 0.6755
+    "recall@5": 0.6769,
+    "mrr@10": 0.6034,
+    "ndcg@10": 0.6571
   }
 }
