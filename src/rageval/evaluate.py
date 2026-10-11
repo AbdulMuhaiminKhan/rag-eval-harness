@@ -29,6 +29,8 @@ def run_eval(cfg: Config, questions: list[Question], out_dir: Path, generate: bo
     t0 = time.perf_counter()
     retriever = Retriever(cfg)
     build_s = time.perf_counter() - t0
+    # Warm up (model load, CUDA init, first HNSW query) so per-query latency is steady state.
+    retriever.retrieve("warm-up query")
     llm = judge_llm = None
     if generate:
         llm = LLM(cfg.generation)

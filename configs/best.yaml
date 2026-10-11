@@ -1,0 +1,18 @@
+# Best retrieval config from the ablation (docs/results/ablation.md): fixed chunks, hybrid
+# BM25 + MiniLM with reciprocal rank fusion, cross-encoder rerank. Used for answer evaluation.
+name: best
+corpus: data/processed/corpus.jsonl
+chunking:
+  strategy: fixed
+  params: {size: 1000, overlap: 150}
+retrieval:
+  retriever: hybrid
+  embedding_model: sentence-transformers/all-MiniLM-L6-v2
+  candidates: 50
+  top_k: 10
+rerank:
+  model: cross-encoder/ms-marco-MiniLM-L-6-v2
+generation:
+  provider: ollama
+  model: qwen2.5:7b
+  context_k: 5

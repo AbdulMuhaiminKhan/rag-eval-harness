@@ -17,8 +17,9 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.ticker  # noqa: E402
 
-from rageval.metrics import paired_bootstrap_diff  # noqa: E402
+from rageval.metrics import bootstrap_ci, paired_bootstrap_diff  # noqa: E402
 
 # Categorical slots 1-3 (blue, orange, aqua), assigned to retrievers in fixed order.
 RETRIEVER_COLORS = {"dense": "#2a78d6", "bm25": "#eb6834", "hybrid": "#1baf7a"}
@@ -58,6 +59,12 @@ def chart(configs: list[dict], out: Path, metric: str) -> None:
         ax.scatter(x, m["mean"], s=70, zorder=2, color=RETRIEVER_COLORS.get(d["retriever"], MUTED),
                    marker="D" if reranked else "o", edgecolor="white", linewidth=1.5)
     ax.set_xscale("log")
+    xs = [c["summary"]["latency"]["retrieval_p50_s"] * 1000 for c in configs]
+    ax.set_xticks([t for t in (5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000)
+                   if min(xs) * 0.7 <= t <= max(xs) * 1.4])
+    ax.set_xlim(min(xs) * 0.7, max(xs) * 1.4)
+    ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:g}"))
+    ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
     ax.set_xlabel("Retrieval latency per query, p50 (ms, log scale)", color=INK)
     ax.set_ylabel(metric, color=INK)
     ax.set_title(f"Retrieval quality vs latency ({metric}, 95% CI)", color=INK, loc="left")
@@ -133,6 +140,16 @@ def main() -> None:
            "|---|---|---|---|"]
     for t, v in best["summary"]["by_type"].items():
         md.append(f"| {t} | {v['recall@5']['n']} | {fmt(v['recall@5'])} | {fmt(v['mrr@10'])} |")
+    # LLM-drafted questions are written while looking at the passage, so they may share more
+    # wording with it than real user questions do; compare against the hand-written subset.
+    md += ["", f"## By question origin ({metric})", "", "| config | hand-written | LLM-drafted |",
+           "|---|---|---|"]
+    for c in (best, base):
+        by = {o: [r[metric] for r in c["rows"] if r["answerable"]
+                  and questions[r["qid"]]["origin"] == o] for o in ("hand", "llm")}
+        cells = [f"{fmt(dict(zip(('mean', 'ci_low', 'ci_high'), bootstrap_ci(v))))} (n={len(v)})"
+                 for v in by.values()]
+        md.append(f"| {c['name']} | {cells[0]} | {cells[1]} |")
     md += ["", f"## Failure analysis ({best['name']})", "", *failures(best, questions), "",
            "![quality vs latency](quality_vs_latency.png)", ""]
     (args.run_dir / "results.md").write_text("\n".join(md), encoding="utf-8")

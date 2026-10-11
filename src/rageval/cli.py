@@ -123,9 +123,14 @@ def ablate(grid: str = "configs/ablation.yaml", questions: str = DEFAULT_QUESTIO
 
     out_root = _run_dir("ablation", out)
     rows = []
+    # Load the eval set once per corpus, so every config is scored on the same questions even
+    # if the file is edited while a long grid is running.
+    question_sets: dict[str, list[Question]] = {}
     for cfg in expand_grid(grid):
-        qs, _ = load_questions(Path(questions), load_corpus(Path(cfg.corpus)), reviewed_only)
-        s = run_eval(cfg, qs, out_root / cfg.name, generate=generate)
+        if cfg.corpus not in question_sets:
+            question_sets[cfg.corpus], _ = load_questions(
+                Path(questions), load_corpus(Path(cfg.corpus)), reviewed_only)
+        s = run_eval(cfg, question_sets[cfg.corpus], out_root / cfg.name, generate=generate)
         rows.append({"name": cfg.name, **{k: v["mean"] for k, v in s["metrics"].items()},
                      **s["latency"], "num_chunks": s["num_chunks"]})
         typer.echo(cfg.name)
@@ -230,7 +235,8 @@ def calibrate(run: str = typer.Option(..., help="a --generate run dir"),
              if x.strip()]
     for key in ("correct", "faithful"):
         pairs = [(h[key], judged[h["qid"]][f"judge_{key}"]) for h in human
-                 if h["qid"] in judged and judged[h["qid"]].get(f"judge_{key}") is not None]
+                 if h.get(key) is not None and h["qid"] in judged
+                 and judged[h["qid"]].get(f"judge_{key}") is not None]
         res = agreement([p[0] for p in pairs], [p[1] for p in pairs])
         typer.echo(f"{key}: " + json.dumps(res))
 
