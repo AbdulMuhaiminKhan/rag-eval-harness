@@ -67,7 +67,7 @@ The best retrieval config feeds its top 5 chunks to `qwen2.5:7b` through Ollama
 | measure | result |
 |---|---|
 | answers correct (gemma2 9B judge, all 171 answerable) | 0.825 [0.77, 0.88] |
-| answers faithful to the passages (same judge) | 0.930 [0.89, 0.97] |
+| answers faithful to the passages (same judge) | 0.930 [0.89, 0.96] |
 | abstains on unanswerable questions | 15 of 15 |
 | abstains on answerable questions (false abstention) | 0.070 [0.035, 0.111] |
 | generation latency, p50 / p95 | 4.1 s / 7.7 s |
@@ -168,7 +168,7 @@ regression. Regenerate it with `python scripts/update_ci_baseline.py`.
 
 ```bash
 python -m venv .venv && .venv/Scripts/activate      # source .venv/bin/activate on Linux/macOS
-pip install -e ".[dev,report]"
+pip install -e ".[dev,report,web]"
 ollama pull qwen2.5:7b                              # only needed for answers and the judge
 
 rageval ingest --ref "$(cat data/CORPUS_COMMIT)"    # Kubernetes docs at the pinned commit

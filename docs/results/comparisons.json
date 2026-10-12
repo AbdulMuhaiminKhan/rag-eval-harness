@@ -4,14 +4,14 @@
     "from": "fixed__dense__norerank__minilm",
     "to": "fixed__dense__ce__minilm",
     "recall@5": {
-      "diff": 0.1871,
-      "ci_low": 0.1228,
-      "ci_high": 0.2602
+      "diff": 0.1871345029239766,
+      "ci_low": 0.12280701754385964,
+      "ci_high": 0.260233918128655
     },
     "mrr@10": {
-      "diff": 0.2,
-      "ci_low": 0.1442,
-      "ci_high": 0.2582
+      "diff": 0.1999883969182215,
+      "ci_low": 0.14416080711036852,
+      "ci_high": 0.2581991436925647
     }
   },
   {
@@ -19,14 +19,14 @@
     "from": "fixed__hybrid__norerank__minilm",
     "to": "fixed__hybrid__ce__minilm",
     "recall@5": {
-      "diff": 0.0819,
-      "ci_low": 0.0263,
-      "ci_high": 0.1404
+      "diff": 0.08187134502923976,
+      "ci_low": 0.02631578947368421,
+      "ci_high": 0.14035087719298245
     },
     "mrr@10": {
-      "diff": 0.0781,
-      "ci_low": 0.027,
-      "ci_high": 0.1288
+      "diff": 0.07807945790401931,
+      "ci_low": 0.027039299637983853,
+      "ci_high": 0.12878469321451771
     }
   },
   {
@@ -34,14 +34,14 @@
     "from": "fixed__dense__norerank__minilm",
     "to": "fixed__hybrid__norerank__minilm",
     "recall@5": {
-      "diff": 0.1228,
-      "ci_low": 0.0702,
-      "ci_high": 0.1813
+      "diff": 0.12280701754385964,
+      "ci_low": 0.07017543859649122,
+      "ci_high": 0.18128654970760233
     },
     "mrr@10": {
-      "diff": 0.1483,
-      "ci_low": 0.1105,
-      "ci_high": 0.1923
+      "diff": 0.14832683560753734,
+      "ci_low": 0.1105260837278381,
+      "ci_high": 0.19232247284878862
     }
   },
   {
@@ -49,14 +49,14 @@
     "from": "fixed__bm25__norerank__minilm",
     "to": "fixed__hybrid__norerank__minilm",
     "recall@5": {
-      "diff": -0.0117,
-      "ci_low": -0.0643,
-      "ci_high": 0.0409
+      "diff": -0.011695906432748537,
+      "ci_low": -0.06432748538011696,
+      "ci_high": 0.04093567251461988
     },
     "mrr@10": {
-      "diff": 0.0327,
-      "ci_low": -0.0197,
-      "ci_high": 0.0802
+      "diff": 0.03270676691729323,
+      "ci_low": -0.019722628330084466,
+      "ci_high": 0.08020189362294622
     }
   },
   {
@@ -64,14 +64,14 @@
     "from": "fixed__dense__norerank__minilm",
     "to": "fixed__dense__norerank__bge-small",
     "recall@5": {
-      "diff": 0.0526,
-      "ci_low": -0.0175,
-      "ci_high": 0.1228
+      "diff": 0.05263157894736842,
+      "ci_low": -0.017543859649122806,
+      "ci_high": 0.12280701754385964
     },
     "mrr@10": {
-      "diff": 0.0713,
-      "ci_low": 0.0166,
-      "ci_high": 0.1245
+      "diff": 0.07130557876171911,
+      "ci_low": 0.016619152046783627,
+      "ci_high": 0.12451864615241807
     }
   },
   {
@@ -79,14 +79,14 @@
     "from": "fixed__dense__norerank__minilm",
     "to": "semantic__dense__norerank__minilm",
     "recall@5": {
-      "diff": 0.0468,
-      "ci_low": -0.0175,
-      "ci_high": 0.117
+      "diff": 0.04678362573099415,
+      "ci_low": -0.017543859649122806,
+      "ci_high": 0.11695906432748537
     },
     "mrr@10": {
-      "diff": 0.0121,
-      "ci_low": -0.0412,
-      "ci_high": 0.0663
+      "diff": 0.012071846282372596,
+      "ci_low": -0.041151315789473675,
+      "ci_high": 0.06626322751322751
     }
   },
   {
@@ -94,14 +94,14 @@
     "from": "fixed__hybrid__norerank__bge-small",
     "to": "semantic__hybrid__norerank__bge-small",
     "recall@5": {
-      "diff": 0.0585,
-      "ci_low": 0.0029,
-      "ci_high": 0.117
+      "diff": 0.05847953216374269,
+      "ci_low": 0.0029239766081871343,
+      "ci_high": 0.11695906432748537
     },
     "mrr@10": {
-      "diff": 0.0519,
-      "ci_low": -0.0047,
-      "ci_high": 0.1063
+      "diff": 0.051870416782697486,
+      "ci_low": -0.004700292397660822,
+      "ci_high": 0.10626612828367211
     }
   },
   {
@@ -109,14 +109,14 @@
     "from": "fixed__hybrid__ce__minilm",
     "to": "semantic__hybrid__ce__minilm",
     "recall@5": {
-      "diff": -0.0146,
-      "ci_low": -0.0731,
-      "ci_high": 0.0409
+      "diff": -0.014619883040935672,
+      "ci_low": -0.07309941520467836,
+      "ci_high": 0.04093567251461988
     },
     "mrr@10": {
-      "diff": 0.0029,
-      "ci_low": -0.0468,
-      "ci_high": 0.0532
+      "diff": 0.0028682818156502395,
+      "ci_low": -0.04678437993130975,
+      "ci_high": 0.05320337881741385
     }
   }
 ]

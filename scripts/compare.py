@@ -49,7 +49,7 @@ def main() -> None:
         for m in METRICS:
             d, lo, hi = paired_bootstrap_diff([base[q][m] for q in qids], [new[q][m] for q in qids])
             cells.append(f"{d:+.3f} [{lo:+.3f}, {hi:+.3f}]")
-            rec[m] = {"diff": round(d, 4), "ci_low": round(lo, 4), "ci_high": round(hi, 4)}
+            rec[m] = {"diff": d, "ci_low": lo, "ci_high": hi}
         records.append(rec)
         print(f"| {label} | " + " | ".join(cells) + " |")
     if json_out:
