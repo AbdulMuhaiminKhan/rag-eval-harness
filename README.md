@@ -6,6 +6,11 @@ Everything runs locally for $0: open-source embedders and a cross-encoder rerank
 sentence-transformers, Chroma as the vector store, BM25, and a local LLM through Ollama (any
 OpenAI-compatible endpoint can be configured instead).
 
+![Demo: the best setup next to the dense baseline](docs/demo.gif)
+
+The [demo](demo/) shows the best retrieval setup next to the dense-only baseline for any
+question, with per-stage timings: `python demo/app.py`.
+
 ## Results
 
 All numbers below were produced by `rageval` on the committed eval set (186 questions, 171
