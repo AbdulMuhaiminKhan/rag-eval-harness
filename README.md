@@ -41,18 +41,18 @@ gate stops any change that makes retrieval worse.
 ```mermaid
 flowchart LR
     subgraph Pipeline
-        D[Kubernetes docs<br/>pinned commit] --> C[Chunking<br/>fixed or semantic]
-        C --> V[(Chroma<br/>dense index)]
-        C --> B[(BM25<br/>keyword index)]
-        Q[Question] --> V & B
-        V & B --> F[Reciprocal rank<br/>fusion]
-        F --> R[Cross-encoder<br/>rerank]
-        R --> L[Local LLM<br/>qwen2.5 7B]
-        L --> A[Answer with<br/>citations]
+        D["Kubernetes docs<br/>pinned commit"] --> C["Chunking<br/>fixed or semantic"]
+        C --> V[("Chroma<br/>dense index")]
+        C --> B[("BM25<br/>keyword index")]
+        Q["Question"] --> V & B
+        V & B --> F["Reciprocal rank<br/>fusion"]
+        F --> R["Cross-encoder<br/>rerank"]
+        R --> L["Local LLM<br/>qwen2.5 7B"]
+        L --> A["Answer with<br/>citations"]
     end
     subgraph Harness
-        E[186 questions with<br/>evidence quotes] --> M[Recall@k, MRR, nDCG<br/>+ bootstrap CIs]
-        A --> J[Calibrated<br/>LLM judge]
+        E["186 questions with<br/>evidence quotes"] --> M["Recall@k, MRR, nDCG<br/>+ bootstrap CIs"]
+        A --> J["Calibrated<br/>LLM judge"]
         R --> M
     end
 ```
