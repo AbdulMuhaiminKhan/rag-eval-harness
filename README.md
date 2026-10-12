@@ -59,15 +59,18 @@ The best retrieval config feeds its top 5 chunks to `qwen2.5:7b` through Ollama
 
 | measure | result |
 |---|---|
+| answers correct (gemma2 9B judge, all 171 answerable) | 0.825 [0.77, 0.88] |
+| answers faithful to the passages (same judge) | 0.930 [0.89, 0.97] |
 | abstains on unanswerable questions | 15 of 15 |
 | abstains on answerable questions (false abstention) | 0.070 [0.035, 0.111] |
 | generation latency, p50 / p95 | 4.1 s / 7.7 s |
 | prompt / completion tokens per query | ~1,190 / ~83 |
 | cost per query | $0 (local model) |
 
-**Answer correctness is not reported yet, because the LLM judges disagree too much to be
-trusted.** Three judges graded the same 159 answers (the system's answer to every answerable
-question where it did not abstain):
+Correctness and faithfulness come from the one judge that held up in calibration. Abstaining
+on an answerable question counts as not correct. Picking the judge took most of the work.
+Three judges graded the same 159 answers (the system's answer to every answerable question
+where it did not abstain):
 
 | judge | correct rate [95% CI] | faithful rate [95% CI] |
 |---|---|---|
@@ -78,10 +81,24 @@ question where it did not abstain):
 The two qwen prompts agree on correctness only at chance level (Cohen's kappa 0.05). The v2
 prompt fails plainly right answers, such as "10 old ReplicaSets by default", for not naming the
 config field. Even the two v1 judges agree only moderately (kappa 0.51 on correctness, 0.20 on
-faithfulness). [docs/results/judges.md](docs/results/judges.md) has every pairing. The next
-step is calibration: 40 sampled answers are being hand-labelled (`data/eval/human_labels.jsonl`),
-and `rageval calibrate` will report which judge, if any, agrees with a human well enough to
-publish its numbers.
+faithfulness).
+
+To choose between them, 40 sampled answers were graded against all five retrieved passages.
+At the project author's request, Claude graded them as a reference grader, so this is not a
+human-agreement figure. The reasons for each negative label are in
+`data/eval/human_labels.jsonl`.
+
+| judge | correct: accuracy / kappa | faithful: accuracy / kappa |
+|---|---|---|
+| qwen2.5 7B, prompt v1 | 0.900 / 0.28 | 0.650 / −0.09 |
+| qwen2.5 7B, prompt v2 | 0.275 / 0.04 | 0.400 / 0.06 |
+| **gemma2 9B, prompt v1** | **0.875 / 0.38** | **0.925 / 0.36** |
+
+gemma2 9B is the only judge that agrees with the reference on both labels. The qwen judge's
+faithfulness scores agree no better than chance, which also argues against letting the model
+that wrote the answers grade them. The reference marked only 3 of 40 answers incorrect and 2
+unfaithful, so the kappas are noisy. Treat the headline correctness as about ±0.05, plus some
+judge error. [docs/results/judges.md](docs/results/judges.md) has every pairing.
 
 ## Caveats
 
@@ -102,7 +119,7 @@ publish its numbers.
 **Retrieval:** Recall@k, MRR@10, nDCG@10 (k = 1, 3, 5, 10) and document-level recall.
 **Answers:** correctness and faithfulness from an LLM judge, abstention on unanswerable questions
 and false abstentions on answerable ones. **Judge calibration:** agreement and Cohen's kappa
-against hand labels. **Cost and speed:** p50/p95 latency, tokens and USD per query.
+against a labelled reference sample. **Cost and speed:** p50/p95 latency, tokens and USD per query.
 Every headline number has a 95% bootstrap CI; comparisons use a paired bootstrap.
 
 ### Labels are evidence spans, not chunk ids
@@ -157,7 +174,7 @@ python scripts/report.py runs/ablation              # results table, failures, c
 python scripts/compare.py runs/ablation             # one-change-at-a-time comparisons
 rageval ask "How do I roll back a Deployment?" --config configs/best.yaml
 
-# judge comparison and calibration against hand labels
+# judge comparison and calibration against reference labels
 rageval rejudge --run runs/answers --out runs/answers_gemma --model gemma2:9b
 python scripts/judge_agreement.py qwen=runs/answers gemma=runs/answers_gemma
 rageval calibrate --run runs/answers --run runs/answers_gemma
