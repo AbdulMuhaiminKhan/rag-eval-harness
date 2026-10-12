@@ -89,9 +89,8 @@ config field. Even the two v1 judges agree only moderately (kappa 0.51 on correc
 faithfulness).
 
 To choose between them, 40 sampled answers were graded against all five retrieved passages.
-At the project author's request, Claude graded them as a reference grader, so this is not a
-human-agreement figure. The reasons for each negative label are in
-`data/eval/human_labels.jsonl`.
+Claude suggested each label, and the author then reviewed and confirmed all 40 (none were
+changed). The reasons for each negative label are in `data/eval/human_labels.jsonl`.
 
 | judge | correct: accuracy / kappa | faithful: accuracy / kappa |
 |---|---|---|

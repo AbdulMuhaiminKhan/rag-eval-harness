@@ -17,10 +17,10 @@ Judged answers: 159 answerable questions where the system gave an answer.
 
 ## Calibration against reference labels
 
-40 judged answers were sampled (`scripts/make_label_sheet.py`, seed 0) and graded by Claude as a
-reference grader, at the project author's request, not by a human. Each label was decided by
-reading the question, reference answer, system answer and all five retrieved passages; the
-reasons for every negative label are in `data/eval/human_labels.jsonl`. The reference labels
+40 judged answers were sampled (`scripts/make_label_sheet.py`, seed 0). Claude suggested each
+label by reading the question, reference answer, system answer and all five retrieved passages;
+the author then reviewed every suggestion on a labelling page and confirmed all 40 without
+changes. The reasons for every negative label are in `data/eval/human_labels.jsonl`. The reference labels
 37/40 answers correct and 38/40 faithful.
 
 | judge | label | accuracy | Cohen's kappa | judge positive rate |
