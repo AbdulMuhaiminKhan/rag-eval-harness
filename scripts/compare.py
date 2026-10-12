@@ -36,17 +36,24 @@ def load(run: Path, name: str) -> dict:
 
 
 def main() -> None:
+    """Print a Markdown table; with --json PATH also write the same numbers as JSON."""
     run = Path(sys.argv[1])
+    json_out = Path(sys.argv[sys.argv.index("--json") + 1]) if "--json" in sys.argv else None
     print("| change | " + " | ".join(f"Δ {m} [95% CI]" for m in METRICS) + " |")
     print("|---|" + "---|" * len(METRICS))
+    records = []
     for label, a, b in PAIRS:
         base, new = load(run, a), load(run, b)
         qids = sorted(base)
-        cells = []
+        cells, rec = [], {"change": label, "from": a, "to": b}
         for m in METRICS:
             d, lo, hi = paired_bootstrap_diff([base[q][m] for q in qids], [new[q][m] for q in qids])
             cells.append(f"{d:+.3f} [{lo:+.3f}, {hi:+.3f}]")
+            rec[m] = {"diff": round(d, 4), "ci_low": round(lo, 4), "ci_high": round(hi, 4)}
+        records.append(rec)
         print(f"| {label} | " + " | ".join(cells) + " |")
+    if json_out:
+        json_out.write_text(json.dumps(records, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
 if __name__ == "__main__":

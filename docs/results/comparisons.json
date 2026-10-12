@@ -1,0 +1,122 @@
+[
+  {
+    "change": "cross-encoder reranker, on dense",
+    "from": "fixed__dense__norerank__minilm",
+    "to": "fixed__dense__ce__minilm",
+    "recall@5": {
+      "diff": 0.1871,
+      "ci_low": 0.1228,
+      "ci_high": 0.2602
+    },
+    "mrr@10": {
+      "diff": 0.2,
+      "ci_low": 0.1442,
+      "ci_high": 0.2582
+    }
+  },
+  {
+    "change": "cross-encoder reranker, on hybrid",
+    "from": "fixed__hybrid__norerank__minilm",
+    "to": "fixed__hybrid__ce__minilm",
+    "recall@5": {
+      "diff": 0.0819,
+      "ci_low": 0.0263,
+      "ci_high": 0.1404
+    },
+    "mrr@10": {
+      "diff": 0.0781,
+      "ci_low": 0.027,
+      "ci_high": 0.1288
+    }
+  },
+  {
+    "change": "hybrid instead of dense",
+    "from": "fixed__dense__norerank__minilm",
+    "to": "fixed__hybrid__norerank__minilm",
+    "recall@5": {
+      "diff": 0.1228,
+      "ci_low": 0.0702,
+      "ci_high": 0.1813
+    },
+    "mrr@10": {
+      "diff": 0.1483,
+      "ci_low": 0.1105,
+      "ci_high": 0.1923
+    }
+  },
+  {
+    "change": "hybrid instead of BM25",
+    "from": "fixed__bm25__norerank__minilm",
+    "to": "fixed__hybrid__norerank__minilm",
+    "recall@5": {
+      "diff": -0.0117,
+      "ci_low": -0.0643,
+      "ci_high": 0.0409
+    },
+    "mrr@10": {
+      "diff": 0.0327,
+      "ci_low": -0.0197,
+      "ci_high": 0.0802
+    }
+  },
+  {
+    "change": "bge-small instead of MiniLM, dense",
+    "from": "fixed__dense__norerank__minilm",
+    "to": "fixed__dense__norerank__bge-small",
+    "recall@5": {
+      "diff": 0.0526,
+      "ci_low": -0.0175,
+      "ci_high": 0.1228
+    },
+    "mrr@10": {
+      "diff": 0.0713,
+      "ci_low": 0.0166,
+      "ci_high": 0.1245
+    }
+  },
+  {
+    "change": "semantic instead of fixed chunks, dense",
+    "from": "fixed__dense__norerank__minilm",
+    "to": "semantic__dense__norerank__minilm",
+    "recall@5": {
+      "diff": 0.0468,
+      "ci_low": -0.0175,
+      "ci_high": 0.117
+    },
+    "mrr@10": {
+      "diff": 0.0121,
+      "ci_low": -0.0412,
+      "ci_high": 0.0663
+    }
+  },
+  {
+    "change": "semantic instead of fixed chunks, hybrid bge",
+    "from": "fixed__hybrid__norerank__bge-small",
+    "to": "semantic__hybrid__norerank__bge-small",
+    "recall@5": {
+      "diff": 0.0585,
+      "ci_low": 0.0029,
+      "ci_high": 0.117
+    },
+    "mrr@10": {
+      "diff": 0.0519,
+      "ci_low": -0.0047,
+      "ci_high": 0.1063
+    }
+  },
+  {
+    "change": "semantic instead of fixed chunks, best config",
+    "from": "fixed__hybrid__ce__minilm",
+    "to": "semantic__hybrid__ce__minilm",
+    "recall@5": {
+      "diff": -0.0146,
+      "ci_low": -0.0731,
+      "ci_high": 0.0409
+    },
+    "mrr@10": {
+      "diff": 0.0029,
+      "ci_low": -0.0468,
+      "ci_high": 0.0532
+    }
+  }
+]

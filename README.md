@@ -6,10 +6,12 @@ Everything runs locally for $0: open-source embedders and a cross-encoder rerank
 sentence-transformers, Chroma as the vector store, BM25, and a local LLM through Ollama (any
 OpenAI-compatible endpoint can be configured instead).
 
-![Demo: the best setup next to the dense baseline](docs/demo.gif)
+![Web front end: search, side-by-side retrieval, and the results view](docs/demo.gif)
 
-The [demo](demo/) shows the best retrieval setup next to the dense-only baseline for any
-question, with per-stage timings: `python demo/app.py`.
+The [web front end](web/) (`python web/server.py`, then http://127.0.0.1:8000) runs the best
+retrieval setup next to the dense-only baseline on any question. It shows per-stage timings and
+can generate an answer, and its Results view draws the evaluation below. A lighter Gradio
+version is in [demo/](demo/).
 
 ## Results
 
@@ -207,6 +209,8 @@ src/rageval/
   cli.py         the `rageval` command
 configs/         baseline, best, CI and ablation configs
 data/eval/       eval questions and review log (committed)
+web/             FastAPI server + single-page front end (search, results)
+demo/            lighter Gradio demo
 docs/results/    measured results
 scripts/         reporting, comparisons, review and CI baseline helpers
 ```

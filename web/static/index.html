@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kube-rag · Kubernetes docs search</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a search console. Query bar on top, the two retrieval setups side by side underneath,
+   timings as stacked bars; a Results view carries the evaluation charts. */
+:root {
+  --bg: #f4f6f9; --surface: #ffffff; --raised: #f9fafc; --ink: #121a26; --muted: #5a6677;
+  --faint: #8c97a6; --line: #dce2ea; --accent: #2a5fd6; --accent-ink: #ffffff;
+  --accent-soft: #e7eefc; --mark: #fff1b8; --good: #1b8657; --bad: #c2412d;
+  --s-dense: #2a78d6; --s-bm25: #eb6834; --s-hybrid: #1baf7a; --s-grey: #a3acb8;
+  --font-ui: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0d121a; --surface: #141b25; --raised: #19212d; --ink: #e6ebf2; --muted: #9aa6b6;
+  --faint: #6f7b8c; --line: #273141; --accent: #6b9cf0; --accent-ink: #0a1020;
+  --accent-soft: #1b2a45; --mark: #5a4a12; --good: #3fbf86; --bad: #ef7660;
+  --s-dense: #3987e5; --s-bm25: #d95926; --s-hybrid: #199e70; --s-grey: #5d6878; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0d121a; --surface: #141b25; --raised: #19212d; --ink: #e6ebf2; --muted: #9aa6b6;
+  --faint: #6f7b8c; --line: #273141; --accent: #6b9cf0; --accent-ink: #0a1020;
+  --accent-soft: #1b2a45; --mark: #5a4a12; --good: #3fbf86; --bad: #ef7660;
+  --s-dense: #3987e5; --s-bm25: #d95926; --s-hybrid: #199e70; --s-grey: #5d6878; color-scheme: dark }
+
+* { box-sizing: border-box }
+html, body { margin: 0 }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--font-ui); }
+a { color: var(--accent) }
+button { font: inherit; color: inherit }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 20px }
+@media (max-width: 520px) { .wrap { padding-inline: 16px } }
+
+/* top bar */
+.topbar { border-bottom: 1px solid var(--line); background: var(--surface) }
+.topbar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 12px; flex-wrap: wrap }
+.brand { display: flex; align-items: baseline; gap: 10px; text-decoration: none; color: var(--ink) }
+.brand b { font-size: 1.05rem; letter-spacing: -.01em }
+.brand span { font: 500 .78rem var(--font-mono); color: var(--muted) }
+.tabs { display: flex; gap: 4px }
+.tab { border: 0; background: none; padding: 7px 12px; border-radius: 7px; cursor: pointer; color: var(--muted); font-weight: 500 }
+.tab[aria-selected="true"] { background: var(--accent-soft); color: var(--accent) }
+.ext { font-size: .9rem; color: var(--muted); text-decoration: none }
+.ext:hover { color: var(--accent) }
+
+/* search hero */
+.hero { padding-block: 40px 22px; display: grid; gap: 14px }
+.hero h1 { margin: 0; font-size: clamp(1.6rem, 3.4vw, 2.3rem); line-height: 1.15; letter-spacing: -.02em; text-wrap: balance; max-width: 30ch }
+.hero p.lede { margin: 0; color: var(--muted); max-width: 70ch }
+form.query { display: flex; gap: 10px; flex-wrap: wrap }
+form.query input { flex: 1 1 320px; min-width: 0; font: 1.05rem var(--font-ui); padding: 13px 16px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink) }
+form.query input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent }
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 11px 18px; border-radius: 10px; cursor: pointer; font-weight: 600 }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink) }
+.btn:disabled { opacity: .55; cursor: default }
+.chips { display: flex; flex-wrap: wrap; gap: 8px }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 12px; font-size: .88rem; cursor: pointer; color: var(--muted) }
+.chip:hover { color: var(--ink); border-color: var(--faint) }
+.stats { display: flex; flex-wrap: wrap; gap: 6px 22px; font: .82rem var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums }
+.stats b { color: var(--ink); font-weight: 500 }
+
+/* results of a query */
+.state { color: var(--muted); padding-block: 8px }
+.answer { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; display: grid; gap: 10px; margin-bottom: 22px }
+.answer h2, .col h2, .panel h2 { margin: 0; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600 }
+.answer .text { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 80ch }
+.answer .meta { font: .8rem var(--font-mono); color: var(--faint) }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start }
+@media (max-width: 860px) { .cols { grid-template-columns: 1fr } }
+.col { display: grid; gap: 12px; min-width: 0 }
+.colhead { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; border-bottom: 2px solid var(--ink); padding-bottom: 8px }
+.colhead .name { font-weight: 600; font-size: 1.05rem }
+.colhead .metric { font: .8rem var(--font-mono); color: var(--muted) }
+.col.base .colhead { border-color: var(--s-grey) }
+.hit { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 6px; min-width: 0 }
+.hit header { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: baseline }
+.rank { font: 600 .85rem var(--font-mono); color: var(--faint); width: 1.4em }
+.title { font-weight: 600; text-decoration: none; color: var(--ink); overflow-wrap: anywhere }
+.title:hover { color: var(--accent); text-decoration: underline }
+.score { font: .78rem var(--font-mono); color: var(--faint); font-variant-numeric: tabular-nums }
+.path { font: .76rem var(--font-mono); color: var(--muted); overflow-wrap: anywhere; padding-left: calc(1.4em + 10px) }
+.snippet { margin: 0; color: var(--ink); font-size: .92rem; overflow-wrap: anywhere; padding-left: calc(1.4em + 10px) }
+.snippet mark { background: var(--mark); color: inherit; border-radius: 2px; padding: 0 1px }
+.snippet.full { white-space: pre-wrap; font: .82rem/1.5 var(--font-mono); max-height: 420px; overflow: auto }
+.hit .foot { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding-left: calc(1.4em + 10px) }
+.tag { font: 500 .72rem var(--font-mono); padding: 2px 7px; border-radius: 5px; background: var(--raised); color: var(--muted); border: 1px solid var(--line) }
+.tag.only { color: var(--accent); border-color: var(--accent) }
+.linkbtn { border: 0; background: none; padding: 0; color: var(--accent); cursor: pointer; font-size: .85rem }
+
+/* timings */
+.timings { margin-top: 26px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 20px; display: grid; gap: 12px }
+.trow { display: grid; grid-template-columns: 170px 1fr 70px; gap: 12px; align-items: center }
+@media (max-width: 600px) { .trow { grid-template-columns: 1fr; gap: 4px } }
+.trow .lbl { font-size: .9rem; font-weight: 500 }
+.tbar { display: flex; height: 14px; border-radius: 4px; overflow: hidden; background: var(--raised); gap: 2px }
+.tbar i { display: block; height: 100% }
+.trow .ms { font: .82rem var(--font-mono); text-align: right; font-variant-numeric: tabular-nums }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .82rem; color: var(--muted) }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; background: var(--c); vertical-align: -1px }
+
+/* results view */
+.panels { display: grid; gap: 22px; padding-block: 34px 60px }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; display: grid; gap: 14px; min-width: 0 }
+.panel .finding { margin: 0; font-size: 1.15rem; font-weight: 600; letter-spacing: -.01em; text-wrap: balance; max-width: 60ch }
+.panel .note { margin: 0; color: var(--muted); font-size: .9rem; max-width: 75ch }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px }
+.tile { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--raised) }
+.tile .v { font: 600 1.7rem var(--font-ui); letter-spacing: -.02em; font-variant-numeric: tabular-nums }
+.tile .k { font-size: .85rem; color: var(--muted) }
+.tile .ci { font: .76rem var(--font-mono); color: var(--faint) }
+.chart { width: 100%; height: auto; display: block }
+.chart text { font-family: var(--font-ui); }
+.tablewrap { overflow-x: auto }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; font-variant-numeric: tabular-nums }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap }
+th { font-size: .76rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600 }
+tr.reported td { font-weight: 600 }
+td .bad { color: var(--bad) } td .good { color: var(--good) }
+.tooltip { position: fixed; pointer-events: none; background: var(--ink); color: var(--bg); font-size: .8rem; padding: 6px 9px; border-radius: 6px; max-width: 280px; z-index: 10; white-space: pre-line }
+footer { color: var(--faint); font-size: .82rem; padding-block: 30px; border-top: 1px solid var(--line) }
+[hidden] { display: none !important }
+@media (prefers-reduced-motion: no-preference) { .hit { animation: rise .25s ease both } @keyframes rise { from { opacity: .4; transform: translateY(4px) } } }
+</style>
+</head>
+<body>
+<div class="topbar"><div class="wrap">
+  <a class="brand" href="#search"><b>kube-rag</b><span>retrieval + evaluation harness</span></a>
+  <nav class="tabs" role="tablist" aria-label="Views">
+    <button class="tab" role="tab" id="tab-search" aria-selected="true" data-view="search">Search</button>
+    <button class="tab" role="tab" id="tab-results" aria-selected="false" data-view="results">Results</button>
+  </nav>
+  <a class="ext" href="https://github.com/AbdulMuhaiminKhan/rag-eval-harness" target="_blank" rel="noopener">Code on GitHub ↗</a>
+</div></div>
+
+<main>
+<section id="view-search" class="wrap">
+  <div class="hero">
+    <h1>Ask the Kubernetes docs, and see which retrieval setup finds the answer.</h1>
+    <p class="lede">The left column is the best of 24 measured configurations: BM25 and embeddings fused, then reranked by a cross-encoder. The right column is the plain embedding search most tutorials start with.</p>
+    <form class="query" id="query" role="search">
+      <label for="q" class="sr" hidden>Question</label>
+      <input id="q" name="q" type="search" autocomplete="off" placeholder="How do I roll back a Deployment?" aria-label="Question about Kubernetes">
+      <button class="btn primary" id="go" type="submit">Search</button>
+    </form>
+    <div class="chips" id="examples" aria-label="Example questions"></div>
+    <div class="stats" id="stats"><span>Loading index…</span></div>
+  </div>
+
+  <div id="out">
+    <p class="state" id="state">Pick an example or type a question. Results show the five passages each setup would hand to the language model.</p>
+    <section class="answer" id="answer" hidden aria-live="polite">
+      <h2>Answer from the best setup's passages</h2>
+      <div class="text" id="answer-text"></div>
+      <div class="meta" id="answer-meta"></div>
+      <div><button class="btn" id="answer-btn" type="button">Generate answer</button></div>
+    </section>
+    <div class="cols" id="cols" hidden>
+      <section class="col best" aria-labelledby="h-best">
+        <div class="colhead"><span class="name" id="h-best">Hybrid + reranker</span><span class="metric">Recall@5 0.79 on the eval set</span></div>
+        <div id="best"></div>
+      </section>
+      <section class="col base" aria-labelledby="h-base">
+        <div class="colhead"><span class="name" id="h-base">Dense baseline</span><span class="metric">Recall@5 0.58 on the eval set</span></div>
+        <div id="base"></div>
+      </section>
+    </div>
+    <section class="timings" id="timings" hidden>
+      <h2 style="margin:0;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Where the time went</h2>
+      <div id="trows"></div>
+      <div class="legend" id="tlegend"></div>
+    </section>
+  </div>
+</section>
+
+<section id="view-results" class="wrap" hidden>
+  <div class="panels" id="panels"><p class="state">Loading results…</p></div>
+</section>
+</main>
+
+<div class="wrap"><footer>Kubernetes documentation © The Kubernetes Authors, CC BY 4.0, at a pinned commit. Numbers on the Results view come from the committed eval run in <code>docs/results</code>.</footer></div>
+<div class="tooltip" id="tip" hidden></div>
+
+<script>
+const EXAMPLES = [
+  "How do I roll back a Deployment to the previous version?",
+  "What happens to emptyDir data when a node is drained?",
+  "Why does my CronJob skip runs?",
+  "How do I take a snapshot backup of etcd?",
+  "What is the difference between a Role and a ClusterRole?",
+];
+const STAGE_COLORS = { "retrieve/dense": "var(--s-dense)", "retrieve/bm25": "var(--s-bm25)",
+  "retrieve/fuse": "var(--s-grey)", "retrieve/rerank": "var(--s-hybrid)" };
+const STAGE_NAMES = { "retrieve/dense": "embedding search", "retrieve/bm25": "BM25",
+  "retrieve/fuse": "fusion", "retrieve/rerank": "cross-encoder rerank" };
+const $ = (id) => document.getElementById(id);
+const el = (tag, attrs = {}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") n.className = v; else if (k === "text") n.textContent = v; else n.setAttribute(k, v);
+  }
+  n.append(...kids.filter((k) => k != null));
+  return n;
+};
+let health = { generate: false };
+let current = "";
+
+/* ---------- views ---------- */
+function show(view) {
+  for (const t of document.querySelectorAll(".tab")) t.setAttribute("aria-selected", String(t.dataset.view === view));
+  $("view-search").hidden = view !== "search";
+  $("view-results").hidden = view !== "results";
+  if (view === "results") loadResults();
+  if (location.hash !== "#" + view) history.replaceState(null, "", "#" + view);
+}
+for (const t of document.querySelectorAll(".tab")) t.addEventListener("click", () => show(t.dataset.view));
+window.addEventListener("hashchange", () => show(location.hash === "#results" ? "results" : "search"));
+
+/* ---------- search ---------- */
+for (const ex of EXAMPLES) {
+  const c = el("button", { class: "chip", type: "button", text: ex });
+  c.addEventListener("click", () => { $("q").value = ex; run(ex); });
+  $("examples").append(c);
+}
+$("query").addEventListener("submit", (e) => { e.preventDefault(); run($("q").value); });
+
+const STOP = new Set("a an and are as at be by can do does for from how i if in is it of on or that the this to was what when where which who why will with you your my me".split(" "));
+function terms(q) { return [...new Set(q.toLowerCase().match(/[a-z0-9]+/g) || [])].filter((t) => t.length > 2 && !STOP.has(t)); }
+
+function highlighted(text, ts) {
+  const frag = document.createDocumentFragment();
+  if (!ts.length) { frag.append(text); return frag; }
+  const re = new RegExp(`\\b(${ts.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})\\w*`, "gi");
+  let last = 0;
+  for (const m of text.matchAll(re)) {
+    frag.append(text.slice(last, m.index), el("mark", { text: m[0] }));
+    last = m.index + m[0].length;
+  }
+  frag.append(text.slice(last));
+  return frag;
+}
+
+function snippetOf(text, ts, len = 360) {
+  const flat = text.replace(/`+/g, "").replace(/\s+/g, " ").trim();
+  const lower = flat.toLowerCase();
+  let at = Math.min(...ts.map((t) => lower.indexOf(t)).filter((i) => i >= 0), Infinity);
+  if (!isFinite(at)) at = 0;
+  let start = Math.max(0, at - 80);
+  if (start > 0) { const sp = flat.indexOf(" ", start); if (sp !== -1 && sp < at) start = sp + 1; }
+  return (start > 0 ? "…" : "") + flat.slice(start, start + len) + (start + len < flat.length ? "…" : "");
+}
+
+function renderHits(target, hits, otherIds, ts) {
+  const box = $(target);
+  box.replaceChildren(...hits.map((h) => {
+    const snip = el("p", { class: "snippet" }, highlighted(snippetOf(h.text, ts), ts));
+    const more = el("button", { class: "linkbtn", type: "button", text: "Show full passage" });
+    more.addEventListener("click", () => {
+      const full = !snip.classList.contains("full");
+      snip.classList.toggle("full", full);
+      snip.replaceChildren(highlighted(full ? h.text : snippetOf(h.text, ts), ts));
+      more.textContent = full ? "Show less" : "Show full passage";
+    });
+    const other = otherIds.get(h.chunk_id);
+    const tag = other ? el("span", { class: "tag", text: `also #${other} in the other list` })
+                      : el("span", { class: "tag only", text: "only in this list" });
+    return el("article", { class: "hit" },
+      el("header", {}, el("span", { class: "rank", text: h.rank }),
+        el("a", { class: "title", href: h.url, target: "_blank", rel: "noopener", text: h.title }),
+        el("span", { class: "score", title: "retriever score", text: h.score.toFixed(3) })),
+      el("div", { class: "path", text: h.doc_id }), snip,
+      el("div", { class: "foot" }, tag, more));
+  }));
+}
+
+function renderTimings(data) {
+  const rows = [["Hybrid + reranker", data.best.trace], ["Dense baseline", data.baseline.trace]];
+  const total = (tr) => (tr.find((s) => s.name === "retrieve") || { duration_ms: 0 }).duration_ms;
+  const max = Math.max(...rows.map(([, tr]) => total(tr)), 1);
+  const used = new Set();
+  $("trows").replaceChildren(...rows.map(([label, tr]) => {
+    const bar = el("div", { class: "tbar", role: "img", "aria-label": `${label}: ${total(tr).toFixed(0)} ms` });
+    for (const s of tr.filter((s) => s.name in STAGE_COLORS)) {
+      used.add(s.name);
+      const seg = el("i", { title: `${STAGE_NAMES[s.name]}: ${s.duration_ms.toFixed(1)} ms` });
+      seg.style.width = `${(100 * s.duration_ms) / max}%`;
+      seg.style.background = STAGE_COLORS[s.name];
+      bar.append(seg);
+    }
+    return el("div", { class: "trow" }, el("span", { class: "lbl", text: label }), bar,
+      el("span", { class: "ms", text: `${total(tr).toFixed(0)} ms` }));
+  }));
+  $("tlegend").replaceChildren(...[...used].map((n) => {
+    const s = el("span", { text: STAGE_NAMES[n] }); s.style.setProperty("--c", STAGE_COLORS[n]); return s;
+  }));
+}
+
+async function run(q) {
+  q = (q || "").trim();
+  if (q.length < 3) { $("state").textContent = "Type a question of at least a few words."; return; }
+  current = q;
+  $("state").hidden = false;
+  $("state").textContent = "Searching both setups…";
+  $("go").disabled = true;
+  try {
+    const r = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+    if (!r.ok) throw new Error((await r.json()).detail || r.statusText);
+    const data = await r.json();
+    if (q !== current) return;
+    const ts = terms(q);
+    const bestIds = new Map(data.best.hits.map((h) => [h.chunk_id, h.rank]));
+    const baseIds = new Map(data.baseline.hits.map((h) => [h.chunk_id, h.rank]));
+    renderHits("best", data.best.hits, baseIds, ts);
+    renderHits("base", data.baseline.hits, bestIds, ts);
+    renderTimings(data);
+    $("state").hidden = true;
+    $("cols").hidden = false; $("timings").hidden = false;
+    setupAnswer();
+  } catch (err) {
+    $("state").textContent = `Search failed: ${err.message}. Check that the server is still running.`;
+  } finally { $("go").disabled = false; }
+}
+
+function setupAnswer() {
+  $("answer").hidden = false;
+  $("answer-text").textContent = health.generate
+    ? "Generate an answer from the five passages on the left."
+    : `Answer generation is off: the local model (${health.model || "qwen2.5:7b"}) isn't running on this server. The passages on the left are what it would be given.`;
+  $("answer-meta").textContent = "";
+  $("answer-btn").hidden = !health.generate;
+  $("answer-btn").disabled = false;
+}
+$("answer-btn").addEventListener("click", async () => {
+  const q = current;
+  $("answer-btn").disabled = true;
+  $("answer-text").textContent = "Writing an answer with the local model…";
+  try {
+    const r = await fetch("/api/answer", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ q }) });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || r.statusText);
+    if (q !== current) return;
+    $("answer-text").textContent = data.answer;
+    $("answer-meta").textContent = `${data.latency_s}s · ${data.tokens_in} + ${data.tokens_out} tokens · $0, local model`;
+    $("answer-btn").hidden = true;
+  } catch (err) {
+    $("answer-text").textContent = `No answer: ${err.message}`;
+    $("answer-btn").disabled = false;
+  }
+});
+
+/* ---------- results view ---------- */
+let resultsLoaded = false;
+async function loadResults() {
+  if (resultsLoaded) return;
+  try {
+    const data = await (await fetch("/api/results")).json();
+    resultsLoaded = true;
+    renderResults(data);
+  } catch (err) {
+    $("panels").replaceChildren(el("p", { class: "state", text: `Couldn't load results: ${err.message}` }));
+  }
+}
+
+const svgEl = (tag, attrs = {}, text) => {
+  const n = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+  if (text != null) n.textContent = text;
+  return n;
+};
+const tip = $("tip");
+function hover(node, text) {
+  node.addEventListener("pointerenter", () => { tip.textContent = text; tip.hidden = false; });
+  node.addEventListener("pointermove", (e) => { tip.style.left = `${e.clientX + 12}px`; tip.style.top = `${e.clientY + 12}px`; });
+  node.addEventListener("pointerleave", () => { tip.hidden = true; });
+}
+const pct = (v) => `${(100 * v).toFixed(1)}%`;
+
+function scatter(cfgs) {
+  const W = 760, H = 380, L = 64, R = 24, T = 20, B = 52;
+  const xs = cfgs.map((c) => c.p50_ms);
+  const lx = (v) => Math.log10(v);
+  const x0 = lx(Math.min(...xs) * 0.75), x1 = lx(Math.max(...xs) * 1.35);
+  const y0 = 0.5, y1 = 0.9;
+  const X = (v) => L + ((lx(v) - x0) / (x1 - x0)) * (W - L - R);
+  const Y = (v) => T + (1 - (v - y0) / (y1 - y0)) * (H - T - B);
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, class: "chart", role: "img", "aria-label": "Recall@5 against retrieval latency for 24 configurations" });
+  for (let v = 0.5; v <= 0.9001; v += 0.1) {
+    svg.append(svgEl("line", { x1: L, x2: W - R, y1: Y(v), y2: Y(v), stroke: "var(--line)" }));
+    svg.append(svgEl("text", { x: L - 10, y: Y(v) + 4, "text-anchor": "end", fill: "var(--muted)", "font-size": 12 }, v.toFixed(1)));
+  }
+  for (const t of [10, 20, 50, 100, 200, 500, 1000]) {
+    if (lx(t) < x0 || lx(t) > x1) continue;
+    svg.append(svgEl("line", { x1: X(t), x2: X(t), y1: T, y2: H - B, stroke: "var(--line)" }));
+    svg.append(svgEl("text", { x: X(t), y: H - B + 18, "text-anchor": "middle", fill: "var(--muted)", "font-size": 12 }, t));
+  }
+  svg.append(svgEl("text", { x: (L + W - R) / 2, y: H - 10, "text-anchor": "middle", fill: "var(--muted)", "font-size": 12 }, "retrieval latency per query, p50 (ms, log scale)"));
+  svg.append(svgEl("text", { x: 16, y: (T + H - B) / 2, transform: `rotate(-90 16 ${(T + H - B) / 2})`, "text-anchor": "middle", fill: "var(--muted)", "font-size": 12 }, "Recall@5"));
+  const color = { dense: "var(--s-dense)", bm25: "var(--s-bm25)", hybrid: "var(--s-hybrid)" };
+  for (const c of cfgs) {
+    const r = c["recall@5"], cx = X(c.p50_ms);
+    svg.append(svgEl("line", { x1: cx, x2: cx, y1: Y(r.ci_low), y2: Y(r.ci_high), stroke: color[c.retriever], "stroke-opacity": 0.35, "stroke-width": 2 }));
+    const mark = c.rerank === "ce"
+      ? svgEl("rect", { x: cx - 6, y: Y(r.mean) - 6, width: 12, height: 12, transform: `rotate(45 ${cx} ${Y(r.mean)})`, fill: color[c.retriever], stroke: "var(--surface)", "stroke-width": 2 })
+      : svgEl("circle", { cx, cy: Y(r.mean), r: 6.5, fill: color[c.retriever], stroke: "var(--surface)", "stroke-width": 2 });
+    hover(mark, `${c.chunking} chunks · ${c.retriever} · ${c.rerank === "ce" ? "reranked" : "no rerank"} · ${c.embedding}\nRecall@5 ${r.mean.toFixed(3)} [${r.ci_low.toFixed(2)}, ${r.ci_high.toFixed(2)}] · ${c.p50_ms} ms`);
+    svg.append(mark);
+  }
+  return svg;
+}
+
+function forest(rows) {
+  const W = 760, rowH = 38, L = 300, R = 70, T = 26;
+  const H = T + rows.length * rowH + 30;
+  const x0 = -0.1, x1 = 0.3;
+  const X = (v) => L + ((v - x0) / (x1 - x0)) * (W - L - R);
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, class: "chart", role: "img", "aria-label": "Paired change in Recall@5 from one design change at a time" });
+  for (const t of [-0.1, 0, 0.1, 0.2, 0.3]) {
+    svg.append(svgEl("line", { x1: X(t), x2: X(t), y1: T - 10, y2: H - 26, stroke: t === 0 ? "var(--faint)" : "var(--line)" }));
+    svg.append(svgEl("text", { x: X(t), y: H - 8, "text-anchor": "middle", fill: "var(--muted)", "font-size": 12 }, (t > 0 ? "+" : "") + t.toFixed(1)));
+  }
+  rows.forEach((r, i) => {
+    const d = r["recall@5"], cy = T + i * rowH + rowH / 2;
+    const clear = d.ci_low > 0 || d.ci_high < 0;
+    const col = clear ? "var(--accent)" : "var(--s-grey)";
+    svg.append(svgEl("text", { x: L - 14, y: cy + 4, "text-anchor": "end", fill: "var(--ink)", "font-size": 13 }, r.change));
+    svg.append(svgEl("line", { x1: X(d.ci_low), x2: X(d.ci_high), y1: cy, y2: cy, stroke: col, "stroke-width": 2.5 }));
+    const dot = svgEl("circle", { cx: X(d.diff), cy, r: 6, fill: col });
+    hover(dot, `${r.change}: ${(d.diff > 0 ? "+" : "") + d.diff.toFixed(3)} Recall@5, 95% CI ${d.ci_low.toFixed(3)} to ${d.ci_high.toFixed(3)}`);
+    svg.append(dot);
+    svg.append(svgEl("text", { x: X(d.ci_high) + 8, y: cy + 4, fill: "var(--muted)", "font-size": 12 }, (d.diff > 0 ? "+" : "") + d.diff.toFixed(3)));
+  });
+  return svg;
+}
+
+function renderResults({ ablation, comparisons, answers }) {
+  const cfgs = ablation.configs;
+  const best = [...cfgs].sort((a, b) => b["recall@5"].mean - a["recall@5"].mean)[0];
+  const base = cfgs.find((c) => c.name === "fixed__dense__norerank__minilm");
+  const judge = answers.judges.find((j) => j.id === answers.reported_judge);
+
+  const tiles = el("div", { class: "tiles" },
+    ...[[pct(best["recall@5"].mean), "Recall@5, best setup", `95% CI ${pct(best["recall@5"].ci_low)}–${pct(best["recall@5"].ci_high)}`],
+        [pct(base["recall@5"].mean), "Recall@5, dense baseline", `95% CI ${pct(base["recall@5"].ci_low)}–${pct(base["recall@5"].ci_high)}`],
+        [pct(judge.correct.mean), "Answers correct", `gemma2 9B judge · CI ${pct(judge.correct.ci_low)}–${pct(judge.correct.ci_high)}`],
+        [pct(judge.faithful.mean), "Answers faithful to passages", `same judge · CI ${pct(judge.faithful.ci_low)}–${pct(judge.faithful.ci_high)}`],
+        [`${answers.abstention_on_unanswerable.n}/${answers.abstention_on_unanswerable.n}`, "Unanswerable questions declined", `false abstention ${pct(answers.false_abstention_on_answerable.mean)}`]]
+      .map(([v, k, ci]) => el("div", { class: "tile" }, el("div", { class: "v", text: v }), el("div", { class: "k", text: k }), el("div", { class: "ci", text: ci }))));
+
+  const legend = el("div", { class: "legend" });
+  for (const [n, c] of [["dense", "var(--s-dense)"], ["BM25", "var(--s-bm25)"], ["hybrid", "var(--s-hybrid)"]]) {
+    const s = el("span", { text: n }); s.style.setProperty("--c", c); legend.append(s);
+  }
+  legend.append(el("span", { text: "● no rerank   ◆ cross-encoder rerank" }));
+
+  const judgeTable = el("table", {},
+    el("thead", {}, el("tr", {}, ...["judge", "correct rate", "faithful rate", "agreement: correct", "agreement: faithful"].map((h) => el("th", { text: h })))),
+    el("tbody", {}, ...answers.judges.map((j) => el("tr", { class: j.id === answers.reported_judge ? "reported" : "" },
+      el("td", { text: j.label + (j.id === answers.reported_judge ? " (reported)" : "") }),
+      el("td", { text: pct(j.correct.mean) }), el("td", { text: pct(j.faithful.mean) }),
+      el("td", { text: `${pct(j.correct_agreement.accuracy)} · κ ${j.correct_agreement.kappa.toFixed(2)}` }),
+      el("td", { text: `${pct(j.faithful_agreement.accuracy)} · κ ${j.faithful_agreement.kappa.toFixed(2)}` })))));
+
+  $("panels").replaceChildren(
+    el("section", { class: "panel" }, el("h2", { text: "Headline" }),
+      el("p", { class: "finding", text: `The best setup finds the evidence in its top 5 for ${pct(best["recall@5"].mean)} of answerable questions, against ${pct(base["recall@5"].mean)} for plain embedding search.` }),
+      tiles,
+      el("p", { class: "note", text: `${ablation.num_answerable} answerable questions out of 186; intervals are 95% bootstrap CIs over questions. Answer scores come from the one judge that agreed with author-confirmed reference labels on both measures.` })),
+    el("section", { class: "panel" }, el("h2", { text: "24 configurations" }),
+      el("p", { class: "finding", text: "Reranking buys most of the quality, for roughly 150 ms per query on a laptop GPU." }),
+      el("div", { class: "tablewrap" }, scatter(cfgs)), legend,
+      el("p", { class: "note", text: "Chunking (fixed or semantic) × retriever × reranker × embedding model (MiniLM or bge-small). Hover a point for its configuration; whiskers are 95% CIs." })),
+    el("section", { class: "panel" }, el("h2", { text: "One change at a time" }),
+      el("p", { class: "finding", text: "The reranker and adding BM25 clearly move Recall@5. Semantic chunks help in one setup without a reranker, and a bigger embedder's gain is within noise." }),
+      el("div", { class: "tablewrap" }, forest(comparisons)),
+      el("p", { class: "note", text: "Paired bootstrap over the same questions. Blue rows exclude zero; grey rows can't be told apart from no change on this eval set." })),
+    el("section", { class: "panel" }, el("h2", { text: "Who grades the answers" }),
+      el("p", { class: "finding", text: "The model that writes the answers is a poor judge of them; an independent gemma2 9B judge agrees with the reference labels." }),
+      el("div", { class: "tablewrap" }, judgeTable),
+      el("p", { class: "note", text: "Agreement is against 40 reference labels suggested by Claude and reviewed and confirmed by the author. With only 2–3 negative labels the kappas are noisy." })));
+}
+
+/* ---------- boot ---------- */
+const ready = fetch("/api/health").then((r) => r.json()).then((h) => {
+  health = h;
+  $("stats").replaceChildren(
+    el("span", {}, el("b", { text: h.docs.toLocaleString("en-US") }), " doc pages"),
+    el("span", {}, el("b", { text: h.chunks.toLocaleString("en-US") }), " chunks"),
+    el("span", {}, "answers: ", el("b", { text: h.generate ? `on (${h.model})` : "off (no local model)" })));
+}).catch(() => { $("stats").textContent = "The API server isn't responding."; });
+show(location.hash === "#results" ? "results" : "search");
+const initial = new URLSearchParams(location.search).get("q");  // shareable link: /?q=...
+if (initial) { $("q").value = initial; ready.finally(() => run(initial)); }
+</script>
+</body>
+</html>

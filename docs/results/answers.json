@@ -1,0 +1,100 @@
+{
+  "generator": "qwen2.5:7b",
+  "judges": [
+    {
+      "id": "qwen-v1",
+      "label": "qwen2.5 7B, prompt v1",
+      "correct": {
+        "mean": 0.848,
+        "ci_low": 0.7953,
+        "ci_high": 0.9006,
+        "n": 171
+      },
+      "correct_agreement": {
+        "accuracy": 0.9,
+        "kappa": 0.2793,
+        "n": 40
+      },
+      "faithful": {
+        "mean": 0.7193,
+        "ci_low": 0.6491,
+        "ci_high": 0.7836,
+        "n": 171
+      },
+      "faithful_agreement": {
+        "accuracy": 0.65,
+        "kappa": -0.0937,
+        "n": 40
+      }
+    },
+    {
+      "id": "qwen-v2",
+      "label": "qwen2.5 7B, prompt v2",
+      "correct": {
+        "mean": 0.1813,
+        "ci_low": 0.1287,
+        "ci_high": 0.2398,
+        "n": 171
+      },
+      "correct_agreement": {
+        "accuracy": 0.275,
+        "kappa": 0.0397,
+        "n": 40
+      },
+      "faithful": {
+        "mean": 0.3684,
+        "ci_low": 0.2982,
+        "ci_high": 0.4386,
+        "n": 171
+      },
+      "faithful_agreement": {
+        "accuracy": 0.4,
+        "kappa": 0.0551,
+        "n": 40
+      }
+    },
+    {
+      "id": "gemma-v1",
+      "label": "gemma2 9B, prompt v1",
+      "correct": {
+        "mean": 0.8246,
+        "ci_low": 0.7661,
+        "ci_high": 0.8772,
+        "n": 171
+      },
+      "correct_agreement": {
+        "accuracy": 0.875,
+        "kappa": 0.3827,
+        "n": 40
+      },
+      "faithful": {
+        "mean": 0.9298,
+        "ci_low": 0.8889,
+        "ci_high": 0.9649,
+        "n": 171
+      },
+      "faithful_agreement": {
+        "accuracy": 0.925,
+        "kappa": 0.3617,
+        "n": 40
+      }
+    }
+  ],
+  "abstention_on_unanswerable": {
+    "mean": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0,
+    "n": 15
+  },
+  "false_abstention_on_answerable": {
+    "mean": 0.07017543859649122,
+    "ci_low": 0.03508771929824561,
+    "ci_high": 0.1111111111111111,
+    "n": 171
+  },
+  "latency": {
+    "generation_p50_s": 4.1275975500011555,
+    "generation_p95_s": 7.679304849999426
+  },
+  "reported_judge": "gemma-v1"
+}

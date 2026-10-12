@@ -23,6 +23,7 @@ dependencies = [
 dev = ["pytest>=8", "ruff>=0.5"]
 report = ["matplotlib>=3.8", "pandas>=2.1"]
 demo = ["gradio>=5,<6"]
+web = ["fastapi>=0.110", "uvicorn>=0.29"]
 
 [project.scripts]
 rageval = "rageval.cli:app"
