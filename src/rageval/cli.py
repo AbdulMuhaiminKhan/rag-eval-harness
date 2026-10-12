@@ -98,7 +98,8 @@ def validate(questions: str = DEFAULT_QUESTIONS, corpus: str = "data/processed/c
 @app.command("eval")
 def eval_cmd(config: str = DEFAULT_CONFIG, questions: str = DEFAULT_QUESTIONS,
              corpus: str | None = None, generate: bool = False, reviewed_only: bool = False,
-             limit: int | None = None, out: str | None = None):
+             limit: int | None = None, out: str | None = None,
+             resume: bool = typer.Option(False, help="continue an interrupted run in --out")):
     """Evaluate one config. Retrieval metrics always; answers + judge with --generate."""
     from .evaluate import run_eval
 
@@ -110,7 +111,7 @@ def eval_cmd(config: str = DEFAULT_CONFIG, questions: str = DEFAULT_QUESTIONS,
         typer.echo(f"skipping {len(problems)} questions with unresolved evidence (see validate)")
     qs = qs[:limit] if limit else qs
     out_dir = _run_dir(cfg.name, out)
-    s = run_eval(cfg, qs, out_dir, generate=generate)
+    s = run_eval(cfg, qs, out_dir, generate=generate, resume=resume)
     typer.echo(f"{cfg.name}: {s['num_chunks']} chunks -> {out_dir}")
     _print_summary(s)
 

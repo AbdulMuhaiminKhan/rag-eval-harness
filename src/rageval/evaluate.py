@@ -24,7 +24,9 @@ HEADLINE = ("recall@5", "mrr@10", "ndcg@10")
 
 
 def run_eval(cfg: Config, questions: list[Question], out_dir: Path, generate: bool = False,
-             judge_cfg=None, min_overlap: float = 0.5) -> dict:
+             judge_cfg=None, min_overlap: float = 0.5, resume: bool = False) -> dict:
+    """Evaluate ``questions``. Rows are appended to per_question.jsonl as they finish, so a long
+    --generate run that is interrupted can continue with ``resume=True``."""
     cfg.retrieval.top_k = max(cfg.retrieval.top_k, max(KS))
     t0 = time.perf_counter()
     retriever = Retriever(cfg)
@@ -36,8 +38,17 @@ def run_eval(cfg: Config, questions: list[Question], out_dir: Path, generate: bo
         llm = LLM(cfg.generation)
         judge_llm = LLM(judge_cfg or cfg.generation)
 
+    out_dir.mkdir(parents=True, exist_ok=True)
+    rows_path = out_dir / "per_question.jsonl"
     rows = []
-    for q in tqdm(questions, desc=cfg.name):
+    if resume and rows_path.exists():
+        wanted = {q.qid for q in questions}
+        rows = [r for r in map(json.loads, rows_path.read_text(encoding="utf-8").splitlines())
+                if r["qid"] in wanted]
+    done = {r["qid"] for r in rows}
+    out = rows_path.open("w", encoding="utf-8", newline="\n")
+    out.writelines(json.dumps(r, ensure_ascii=False) + "\n" for r in rows)
+    for q in tqdm([q for q in questions if q.qid not in done], desc=cfg.name):
         t = time.perf_counter()
         hits = retriever.retrieve(q.question)
         row = {"qid": q.qid, "type": q.type, "answerable": q.answerable,
@@ -55,16 +66,15 @@ def run_eval(cfg: Config, questions: list[Question], out_dir: Path, generate: bo
                 judge_llm, q.question, q.reference_answer, context, res.text,
                 q.answerable).items()})
         rows.append(row)
+        out.write(json.dumps(row, ensure_ascii=False) + "\n")
+        out.flush()
+    out.close()
 
     summary = summarize(rows)
     summary["config"] = asdict(cfg)
     summary["index_build_s"] = build_s
     summary["num_chunks"] = len(retriever.chunks)
     summary["fingerprint"] = fingerprint(cfg, questions)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    with (out_dir / "per_question.jsonl").open("w", encoding="utf-8", newline="\n") as f:
-        for r in rows:
-            f.write(json.dumps(r, ensure_ascii=False) + "\n")
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     return summary
 
