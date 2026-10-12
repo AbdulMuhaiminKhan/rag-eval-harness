@@ -18,6 +18,7 @@ from .generation import LLM, answer
 from .judge import judge_answer
 from .metrics import bootstrap_ci, retrieval_scores
 from .retrieval import Retriever
+from .tracing import Trace
 
 KS = (1, 3, 5, 10)
 HEADLINE = ("recall@5", "mrr@10", "ndcg@10")
@@ -49,8 +50,9 @@ def run_eval(cfg: Config, questions: list[Question], out_dir: Path, generate: bo
     out = rows_path.open("w", encoding="utf-8", newline="\n")
     out.writelines(json.dumps(r, ensure_ascii=False) + "\n" for r in rows)
     for q in tqdm([q for q in questions if q.qid not in done], desc=cfg.name):
+        trace = Trace()
         t = time.perf_counter()
-        hits = retriever.retrieve(q.question)
+        hits = retriever.retrieve(q.question, trace)
         row = {"qid": q.qid, "type": q.type, "answerable": q.answerable,
                "retrieval_latency_s": time.perf_counter() - t,
                "retrieved": [{"chunk_id": h.chunk.chunk_id, "score": h.score} for h in hits]}
@@ -58,13 +60,16 @@ def run_eval(cfg: Config, questions: list[Question], out_dir: Path, generate: bo
             row.update(retrieval_scores([h.chunk for h in hits], q.evidence, KS, min_overlap))
         if llm is not None:
             context = hits[: cfg.generation.context_k]
-            res = answer(llm, q.question, context)
+            with trace.span("generate", model=cfg.generation.model):
+                res = answer(llm, q.question, context)
             row.update({"answer": res.text, "generation_latency_s": res.latency_s,
                         "tokens_in": res.tokens_in, "tokens_out": res.tokens_out,
                         "cost_usd": res.cost_usd})
-            row.update({f"judge_{k}": v for k, v in judge_answer(
-                judge_llm, q.question, q.reference_answer, context, res.text,
-                q.answerable).items()})
+            with trace.span("judge"):
+                verdict = judge_answer(judge_llm, q.question, q.reference_answer, context,
+                                       res.text, q.answerable)
+            row.update({f"judge_{k}": v for k, v in verdict.items()})
+        row["trace"] = trace.to_dict()
         rows.append(row)
         out.write(json.dumps(row, ensure_ascii=False) + "\n")
         out.flush()
@@ -117,6 +122,14 @@ def summarize(rows: list[dict]) -> dict:
     lat = [r["retrieval_latency_s"] for r in rows]
     out["latency"] = {"retrieval_p50_s": float(np.median(lat)),
                       "retrieval_p95_s": float(np.percentile(lat, 95))}
+    stages: dict[str, list[float]] = defaultdict(list)
+    for r in rows:
+        for s in r.get("trace", []):
+            stages[s["name"]].append(s["duration_ms"])
+    if stages:
+        out["latency"]["stages_ms"] = {
+            name: {"p50": round(float(np.median(v)), 2), "p95": round(float(np.percentile(v, 95)), 2)}
+            for name, v in sorted(stages.items())}
     if rows and "answer" in rows[0]:
         gen = [r["generation_latency_s"] for r in rows]
         out["latency"].update({"generation_p50_s": float(np.median(gen)),

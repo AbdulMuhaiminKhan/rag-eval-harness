@@ -15,6 +15,7 @@ from .chunking import Chunk, chunk_corpus
 from .config import Config
 from .ingest import load_corpus
 from .models import Embedder, Reranker
+from .tracing import NULL_TRACE, Trace
 
 _TOKEN = re.compile(r"[a-z0-9]+")
 _STOP = frozenset(
@@ -115,21 +116,29 @@ class Retriever:
         self.bm25 = BM25Index(self.chunks) if r.retriever in ("bm25", "hybrid") else None
         self.reranker = Reranker(cfg.rerank.model) if cfg.rerank.model else None
 
-    def candidates(self, query: str) -> list[Hit]:
+    def candidates(self, query: str, trace: Trace = NULL_TRACE) -> list[Hit]:
         r = self.cfg.retrieval
         if r.retriever == "dense":
-            return self.dense.search(query, r.candidates)
+            with trace.span("dense"):
+                return self.dense.search(query, r.candidates)
         if r.retriever == "bm25":
-            return self.bm25.search(query, r.candidates)
+            with trace.span("bm25"):
+                return self.bm25.search(query, r.candidates)
         if r.retriever == "hybrid":
-            lists = [self.dense.search(query, r.candidates), self.bm25.search(query, r.candidates)]
-            return rrf(lists, r.rrf_k, r.candidates)
+            with trace.span("dense"):
+                dense = self.dense.search(query, r.candidates)
+            with trace.span("bm25"):
+                sparse = self.bm25.search(query, r.candidates)
+            with trace.span("fuse"):
+                return rrf([dense, sparse], r.rrf_k, r.candidates)
         raise ValueError(f"unknown retriever: {r.retriever}")
 
-    def retrieve(self, query: str) -> list[Hit]:
-        hits = self.candidates(query)
-        if self.reranker is not None:
-            scores = self.reranker.score(query, [h.chunk.text for h in hits])
-            hits = [Hit(h.chunk, float(s)) for h, s in zip(hits, scores)]
-            hits.sort(key=lambda h: h.score, reverse=True)
-        return hits[: self.cfg.retrieval.top_k]
+    def retrieve(self, query: str, trace: Trace = NULL_TRACE) -> list[Hit]:
+        with trace.span("retrieve"):
+            hits = self.candidates(query, trace)
+            if self.reranker is not None:
+                with trace.span("rerank", candidates=len(hits)):
+                    scores = self.reranker.score(query, [h.chunk.text for h in hits])
+                hits = [Hit(h.chunk, float(s)) for h, s in zip(hits, scores)]
+                hits.sort(key=lambda h: h.score, reverse=True)
+            return hits[: self.cfg.retrieval.top_k]

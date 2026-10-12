@@ -70,3 +70,18 @@ def test_alternative_span_counts_as_covered():
     assert covers(ch("b", 180, 280), gold)
     s = retrieval_scores([ch("b", 180, 280)], [gold], ks=(1,))
     assert s["recall@1"] == 1.0 and s["doc_recall@1"] == 1.0
+
+
+def test_trace_records_nested_spans():
+    from rageval.tracing import NULL_TRACE, Trace
+
+    t = Trace()
+    with t.span("retrieve"):
+        with t.span("rerank", candidates=50):
+            pass
+    names = [s["name"] for s in t.to_dict()]
+    assert names == ["retrieve", "retrieve/rerank"]
+    assert t.to_dict()[1]["attrs"] == {"candidates": 50}
+    with NULL_TRACE.span("x"):
+        pass
+    assert NULL_TRACE.spans == []

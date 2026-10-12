@@ -68,19 +68,28 @@ def index(config: str = DEFAULT_CONFIG):
 
 
 @app.command()
-def ask(question: str, config: str = DEFAULT_CONFIG, show_context: bool = False):
+def ask(question: str, config: str = DEFAULT_CONFIG, show_context: bool = False,
+        trace: bool = typer.Option(False, help="print where the time went, per stage")):
     """Answer one question with the configured pipeline."""
     from .generation import LLM, answer
     from .retrieval import Retriever
+    from .tracing import NULL_TRACE, Trace
 
     cfg = Config.load(config)
-    hits = Retriever(cfg).retrieve(question)[: cfg.generation.context_k]
+    retriever = Retriever(cfg)
+    t = Trace() if trace else NULL_TRACE
+    hits = retriever.retrieve(question, t)[: cfg.generation.context_k]
     for i, h in enumerate(hits, 1):
         typer.echo(f"[{i}] {h.chunk.doc_id}  score={h.score:.3f}")
         if show_context:
             typer.echo(h.chunk.text[:500] + "\n")
-    res = answer(LLM(cfg.generation), question, hits)
+    with t.span("generate", model=cfg.generation.model):
+        res = answer(LLM(cfg.generation), question, hits)
     typer.echo(f"\n{res.text}\n\n({res.latency_s:.1f}s, {res.tokens_in}+{res.tokens_out} tokens)")
+    if trace:
+        typer.echo("\ntrace (first query includes model loading):")
+        for s in t.to_dict():
+            typer.echo(f"  {s['name']:<22} {s['duration_ms']:>9.1f} ms")
 
 
 @app.command()
