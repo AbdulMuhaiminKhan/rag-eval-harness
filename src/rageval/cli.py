@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import random
 import time
+from dataclasses import asdict
 from pathlib import Path
 
 import typer
@@ -223,23 +224,70 @@ def gate(run: str = "runs/ci", baseline: str = "ci/baseline.json", max_drop: flo
 
 
 @app.command()
-def calibrate(run: str = typer.Option(..., help="a --generate run dir"),
+def rejudge(run: str = typer.Option(..., help="a --generate run dir"),
+            out: str = typer.Option(..., help="where to write the re-judged run"),
+            version: str = "v1",
+            model: str | None = typer.Option(None, help="judge model; default: the generator")):
+    """Re-grade the stored answers of a --generate run with another judge prompt version,
+    without regenerating them, so judge variants are compared on identical answers."""
+    from tqdm import tqdm
+
+    from .evaluate import summarize
+    from .generation import LLM
+    from .judge import judge_answer
+    from .retrieval import Hit, load_or_build_chunks
+
+    src = Path(run)
+    summary = json.loads((src / "summary.json").read_text(encoding="utf-8"))
+    cfg = Config.from_dict(summary["config"])
+    chunks = {c.chunk_id: c for c in load_or_build_chunks(cfg)}
+    qs, _ = load_questions(Path(DEFAULT_QUESTIONS), load_corpus(Path(cfg.corpus)), strict=False)
+    by_id = {q.qid: q for q in qs}
+    judge_cfg = GenerationConfig(**{**asdict(cfg.generation), **({"model": model} if model else {})})
+    llm = LLM(judge_cfg)
+    rows = [json.loads(x) for x in (src / "per_question.jsonl").read_text(encoding="utf-8").splitlines()]
+    dst = Path(out)
+    dst.mkdir(parents=True, exist_ok=True)
+    with (dst / "per_question.jsonl").open("w", encoding="utf-8", newline="\n") as f:
+        for r in tqdm(rows, desc=f"judge {version}"):
+            q = by_id[r["qid"]]
+            hits = [Hit(chunks[h["chunk_id"]], h["score"])
+                    for h in r["retrieved"][: cfg.generation.context_k]]
+            verdict = judge_answer(llm, q.question, q.reference_answer, hits, r["answer"],
+                                   q.answerable, version=version)
+            r.update({f"judge_{k}": v for k, v in verdict.items()})
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+            f.flush()
+    new = summarize(rows)
+    for key in ("config", "index_build_s", "num_chunks", "fingerprint"):
+        new[key] = summary.get(key)
+    new["judge"] = {"prompt": version, "model": judge_cfg.model}
+    (dst / "summary.json").write_text(json.dumps(new, indent=2), encoding="utf-8")
+    _print_summary(new)
+
+
+@app.command()
+def calibrate(run: list[str] = typer.Option(..., help="one or more judged runs to compare"),
               labels: str = "data/eval/human_labels.jsonl"):
-    """Report judge vs human agreement on a hand-labelled subset of a --generate run."""
+    """Report each judge's agreement with human labels (accuracy and Cohen's kappa)."""
     from .judge import agreement
 
-    judged = {}
-    for line in (Path(run) / "per_question.jsonl").read_text(encoding="utf-8").splitlines():
-        r = json.loads(line)
-        judged[r["qid"]] = r
     human = [json.loads(x) for x in Path(labels).read_text(encoding="utf-8").splitlines()
              if x.strip()]
-    for key in ("correct", "faithful"):
-        pairs = [(h[key], judged[h["qid"]][f"judge_{key}"]) for h in human
-                 if h.get(key) is not None and h["qid"] in judged
-                 and judged[h["qid"]].get(f"judge_{key}") is not None]
-        res = agreement([p[0] for p in pairs], [p[1] for p in pairs])
-        typer.echo(f"{key}: " + json.dumps(res))
+    typer.echo(f"{'run':<34} {'label':<9} {'n':>3} {'acc':>6} {'kappa':>6} {'judge+':>7} {'human+':>7}")
+    for r in run:
+        judged = {}
+        for line in (Path(r) / "per_question.jsonl").read_text(encoding="utf-8").splitlines():
+            row = json.loads(line)
+            judged[row["qid"]] = row
+        for key in ("correct", "faithful"):
+            pairs = [(h[key], judged[h["qid"]][f"judge_{key}"]) for h in human
+                     if h.get(key) is not None and h["qid"] in judged
+                     and judged[h["qid"]].get(f"judge_{key}") is not None]
+            res = agreement([p[0] for p in pairs], [p[1] for p in pairs])
+            typer.echo(f"{Path(r).name:<34} {key:<9} {res['n']:>3} {res['accuracy']:>6.3f} "
+                       f"{res['kappa']:>6.3f} {res['judge_positive_rate']:>7.3f} "
+                       f"{res['human_positive_rate']:>7.3f}")
 
 
 if __name__ == "__main__":
