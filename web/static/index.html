@@ -164,11 +164,11 @@ footer { color: var(--faint); font-size: .82rem; padding-block: 30px; border-top
     </section>
     <div class="cols" id="cols" hidden>
       <section class="col best" aria-labelledby="h-best">
-        <div class="colhead"><span class="name" id="h-best">Hybrid + reranker</span><span class="metric">Recall@5 0.79 on the eval set</span></div>
+        <div class="colhead"><span class="name" id="h-best">Hybrid + reranker</span><span class="metric" id="m-best"></span></div>
         <div id="best"></div>
       </section>
       <section class="col base" aria-labelledby="h-base">
-        <div class="colhead"><span class="name" id="h-base">Dense baseline</span><span class="metric">Recall@5 0.58 on the eval set</span></div>
+        <div class="colhead"><span class="name" id="h-base">Dense baseline</span><span class="metric" id="m-base"></span></div>
         <div id="base"></div>
       </section>
     </div>
@@ -356,11 +356,20 @@ $("answer-btn").addEventListener("click", async () => {
 });
 
 /* ---------- results view ---------- */
+const results = fetch("/api/results").then((r) => r.json());
+const BASELINE = "fixed__dense__norerank__minilm";
+const bestOf = (cfgs) => [...cfgs].sort((a, b) => b["recall@5"].mean - a["recall@5"].mean)[0];
+results.then(({ ablation }) => {
+  const recall = (c) => `Recall@5 ${c["recall@5"].mean.toFixed(2)} on the eval set`;
+  $("m-best").textContent = recall(bestOf(ablation.configs));
+  $("m-base").textContent = recall(ablation.configs.find((c) => c.name === BASELINE));
+}).catch(() => {});
+
 let resultsLoaded = false;
 async function loadResults() {
   if (resultsLoaded) return;
   try {
-    const data = await (await fetch("/api/results")).json();
+    const data = await results;
     resultsLoaded = true;
     renderResults(data);
   } catch (err) {
@@ -441,8 +450,8 @@ function forest(rows) {
 
 function renderResults({ ablation, comparisons, answers }) {
   const cfgs = ablation.configs;
-  const best = [...cfgs].sort((a, b) => b["recall@5"].mean - a["recall@5"].mean)[0];
-  const base = cfgs.find((c) => c.name === "fixed__dense__norerank__minilm");
+  const best = bestOf(cfgs);
+  const base = cfgs.find((c) => c.name === BASELINE);
   const judge = answers.judges.find((j) => j.id === answers.reported_judge);
 
   const tiles = el("div", { class: "tiles" },
@@ -471,7 +480,7 @@ function renderResults({ ablation, comparisons, answers }) {
     el("section", { class: "panel" }, el("h2", { text: "Headline" }),
       el("p", { class: "finding", text: `The best setup finds the evidence in its top 5 for ${pct(best["recall@5"].mean)} of answerable questions, against ${pct(base["recall@5"].mean)} for plain embedding search.` }),
       tiles,
-      el("p", { class: "note", text: `${ablation.num_answerable} answerable questions out of 186; intervals are 95% bootstrap CIs over questions. Answer scores come from the one judge that agreed with author-confirmed reference labels on both measures.` })),
+      el("p", { class: "note", text: `${ablation.num_answerable} answerable questions out of ${ablation.num_questions}; intervals are 95% bootstrap CIs over questions. Answer scores come from the one judge that agreed with author-confirmed reference labels on both measures.` })),
     el("section", { class: "panel" }, el("h2", { text: "24 configurations" }),
       el("p", { class: "finding", text: "Reranking buys most of the quality, for roughly 150 ms per query on a laptop GPU." }),
       el("div", { class: "tablewrap" }, scatter(cfgs)), legend,

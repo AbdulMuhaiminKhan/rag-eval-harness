@@ -118,7 +118,7 @@ def results() -> dict:
     def read(name: str):
         return json.loads((RESULTS / name).read_text(encoding="utf-8"))
 
-    return {"ablation": read("ablation_ci.json"), "comparisons": read("comparisons.json"),
+    return {"ablation": read("ablation.json"), "comparisons": read("comparisons.json"),
             "answers": read("answers.json")}
 
 

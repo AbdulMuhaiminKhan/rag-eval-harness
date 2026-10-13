@@ -2,7 +2,8 @@
 
     python scripts/report.py runs/ablation_full [--baseline fixed__dense__norerank__minilm]
 
-Writes results.md and quality_vs_latency.png into the run directory. Every number comes
+Writes results.md, results.json and quality_vs_latency.png into the run directory; they are
+published as docs/results/ablation.md, ablation.json and quality_vs_latency.png. Every number comes
 from the run's own summary.json / per_question.jsonl files.
 """
 
@@ -45,6 +46,26 @@ def describe(name: str) -> dict:
     parts = name.split("__")
     retriever = next((p for p in parts if p in RETRIEVER_COLORS), parts[0])
     return {"retriever": retriever, "rerank": "ce" if "ce" in parts else "none"}
+
+
+def results_json(configs: list[dict]) -> dict:
+    """Every config's headline metrics with CIs: docs/results/ablation.json, which the web view
+    and the demo read."""
+    first = configs[0]["summary"]
+    out = {"num_questions": first["num_questions"], "num_answerable": first["num_answerable"],
+           "configs": []}
+    for c in sorted(configs, key=lambda c: c["name"]):
+        s = c["summary"]
+        chunking, retriever, rerank, embedding = c["name"].split("__")
+        out["configs"].append({
+            "name": c["name"], "chunking": chunking, "retriever": retriever, "rerank": rerank,
+            "embedding": embedding,
+            **{m: {k: s["metrics"][m][k] for k in ("mean", "ci_low", "ci_high")}
+               for m in ("recall@5", "mrr@10")},
+            "p50_ms": round(s["latency"]["retrieval_p50_s"] * 1000, 1),
+            "num_chunks": s["num_chunks"],
+        })
+    return out
 
 
 def chart(configs: list[dict], out: Path, metric: str) -> None:
@@ -153,8 +174,10 @@ def main() -> None:
     md += ["", f"## Failure analysis ({best['name']})", "", *failures(best, questions), "",
            "![quality vs latency](quality_vs_latency.png)", ""]
     (args.run_dir / "results.md").write_text("\n".join(md), encoding="utf-8")
+    (args.run_dir / "results.json").write_text(json.dumps(results_json(configs), indent=1) + "\n",
+                                               encoding="utf-8", newline="\n")
     chart(configs, args.run_dir / "quality_vs_latency.png", metric)
-    print(f"wrote {args.run_dir / 'results.md'} and quality_vs_latency.png")
+    print(f"wrote {args.run_dir / 'results.md'}, results.json and quality_vs_latency.png")
 
 
 if __name__ == "__main__":

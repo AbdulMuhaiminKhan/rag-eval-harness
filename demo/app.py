@@ -10,6 +10,7 @@ is off by default because a free CPU host cannot run the 7B model.
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 from pathlib import Path
@@ -21,7 +22,7 @@ sys.path.insert(0, str(ROOT / "src"))
 os.chdir(ROOT)
 
 from rageval.config import Config  # noqa: E402
-from rageval.ingest import build_corpus  # noqa: E402
+from rageval.ingest import build_corpus, load_corpus  # noqa: E402
 from rageval.retrieval import Retriever  # noqa: E402
 from rageval.tracing import Trace  # noqa: E402
 
@@ -47,6 +48,26 @@ def load(config: str) -> tuple[Config, Retriever]:
     cfg.corpus = str(CORPUS)
     cfg.retrieval.top_k = 5
     return cfg, Retriever(cfg)
+
+
+def header() -> str:
+    """Corpus size and eval numbers, read from the corpus and docs/results/ablation.json so the
+    page never disagrees with the committed results."""
+    manifest = CORPUS.parent / "manifest.json"
+    meta = json.loads(manifest.read_text(encoding="utf-8")) if manifest.exists() else {}
+    pages = meta.get("num_docs") or len(load_corpus(CORPUS))
+    version = f" ({meta['kubernetes_version']})" if meta.get("kubernetes_version") else ""
+    ablation = json.loads((ROOT / "docs" / "results" / "ablation.json").read_text(encoding="utf-8"))
+    cfgs = ablation["configs"]
+    best = max(cfgs, key=lambda c: c["recall@5"]["mean"])["recall@5"]["mean"]
+    base = next(c for c in cfgs if c["name"] == "fixed__dense__norerank__minilm")["recall@5"]["mean"]
+    return (
+        "# Ask the Kubernetes docs\n"
+        f"Retrieval over {pages:,} pages of the Kubernetes documentation{version}. The left column "
+        f"is the best setup from a {len(cfgs)}-config ablation (hybrid BM25 + embeddings, "
+        f"cross-encoder rerank, Recall@5 {best:.2f}); the right is the dense-only baseline "
+        f"(Recall@5 {base:.2f}). "
+        "[Code and results](https://github.com/AbdulMuhaiminKhan/rag-eval-harness)")
 
 
 ensure_corpus()
@@ -92,12 +113,7 @@ def ask(question: str):
 
 
 with gr.Blocks(title="Kubernetes docs RAG", theme=gr.themes.Soft()) as demo:
-    gr.Markdown(
-        "# Ask the Kubernetes docs\n"
-        "Retrieval over 1,269 pages of the Kubernetes documentation (v1.37). The left column is "
-        "the best setup from a 24-config ablation (hybrid BM25 + embeddings, cross-encoder "
-        "rerank, Recall@5 0.79); the right is the dense-only baseline (Recall@5 0.58). "
-        "[Code and results](https://github.com/AbdulMuhaiminKhan/rag-eval-harness)")
+    gr.Markdown(header())
     with gr.Row():
         q = gr.Textbox(label="Question", placeholder=EXAMPLES[0], scale=5)
         go = gr.Button("Search", variant="primary", scale=1)
