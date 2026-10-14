@@ -107,9 +107,11 @@ What this means:
 
 - **The reranker is the biggest single win.** It still helps on top of hybrid search, at roughly
   150 ms extra per query on a GPU (about 2 s on CPU).
-- **BM25 alone is a strong baseline** on technical docs full of exact identifiers such as
-  `maxUnavailable` and `kubectl drain`. Fusing it with dense retrieval mostly improves ranking
-  (MRR) rather than recall.
+- **BM25 beats dense retrieval overall, but only because of the LLM-drafted questions.** On those
+  it wins in all four chunking × embedder pairs. On the 45 hand-written questions it ties in three
+  and loses in one, so most of its lead comes from drafts reusing the docs' wording (see
+  [Limitations](#limitations)). Fusing it with dense retrieval mostly improves ranking (MRR) rather
+  than recall.
 - **Semantic chunking and a better small embedder didn't make a reliable difference** once a
   reranker was in place: their intervals cross zero.
 - **Where it still fails:** the best config misses the evidence entirely for 19 of 171
@@ -271,8 +273,20 @@ request as the change.
 - **LLM-drafted questions are easier than hand-written ones.** The dense baseline scores 0.63
   Recall@5 on the 126 LLM-drafted questions against 0.46 on the 45 hand-written answerable ones;
   the best config scores 0.80 against 0.74. Drafts are written while looking at the passage and
-  share its wording, which flatters every retriever. Treat absolute numbers as optimistic; the
-  comparisons between configs are the robust part.
+  share its wording, which flatters every retriever, and keyword search most of all. BM25 minus
+  dense, Recall@5, paired 95% CI, no reranker:
+
+  | chunking, embedder | hand-written (n=45) | LLM-drafted (n=126) |
+  |---|---|---|
+  | fixed, MiniLM | +0.089 [−0.067, +0.244] | +0.151 [+0.063, +0.238] |
+  | fixed, bge-small | −0.022 [−0.189, +0.133] | +0.119 [+0.032, +0.206] |
+  | semantic, MiniLM | −0.033 [−0.178, +0.122] | +0.159 [+0.056, +0.254] |
+  | semantic, bge-small | −0.156 [−0.278, −0.044] | +0.111 [+0.008, +0.206] |
+
+  Treat absolute numbers as optimistic, and the BM25-vs-dense comparison as an artefact of the
+  drafts. The reranker effect does hold on hand-written questions: the best config scores 0.744 against
+  the dense baseline's 0.456 (paired difference +0.289 [+0.144, +0.444]), and with the reranker
+  every retriever lands between 0.72 and 0.78.
 - **186 questions give CIs about ±0.06 wide on Recall@5.** That's enough to see the reranker and
   hybrid effects, but not to rank the top configs against each other.
 - **The eval set was drafted and reviewed with help from Claude.** Each question records who

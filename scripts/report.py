@@ -171,6 +171,25 @@ def main() -> None:
         cells = [f"{fmt(dict(zip(('mean', 'ci_low', 'ci_high'), bootstrap_ci(v))))} (n={len(v)})"
                  for v in by.values()]
         md.append(f"| {c['name']} | {cells[0]} | {cells[1]} |")
+    # Does BM25's lead over dense survive on hand-written questions, or is it the drafts' wording?
+    by_name = {c["name"]: c for c in configs}
+    md += ["", f"## BM25 minus dense by question origin ({metric}, no reranker)", "",
+           "Paired difference with 95% CI; positive means BM25 is better.", "",
+           "| chunking, embedder | hand-written | LLM-drafted |", "|---|---|---|"]
+    for chunking in ("fixed", "semantic"):
+        for emb in ("minilm", "bge-small"):
+            dense = by_name.get(f"{chunking}__dense__norerank__{emb}")
+            bm25 = by_name.get(f"{chunking}__bm25__norerank__{emb}")
+            if not (dense and bm25):
+                continue
+            cells = []
+            for o in ("hand", "llm"):
+                bm25_by_qid = {r["qid"]: r[metric] for r in bm25["rows"] if r["answerable"]}
+                pairs = [(r[metric], bm25_by_qid[r["qid"]]) for r in dense["rows"]
+                         if r["answerable"] and questions[r["qid"]]["origin"] == o]
+                d, lo, hi = paired_bootstrap_diff([p[0] for p in pairs], [p[1] for p in pairs])
+                cells.append(f"{d:+.3f} [{lo:+.3f}, {hi:+.3f}] (n={len(pairs)})")
+            md.append(f"| {chunking}, {emb} | {cells[0]} | {cells[1]} |")
     md += ["", f"## Failure analysis ({best['name']})", "", *failures(best, questions), "",
            "![quality vs latency](quality_vs_latency.png)", ""]
     (args.run_dir / "results.md").write_text("\n".join(md), encoding="utf-8")

@@ -48,6 +48,17 @@
 | fixed__hybrid__ce__minilm | 0.744 [0.62, 0.87] (n=45) | 0.802 [0.73, 0.87] (n=126) |
 | fixed__dense__norerank__minilm | 0.456 [0.31, 0.59] (n=45) | 0.627 [0.54, 0.71] (n=126) |
 
+## BM25 minus dense by question origin (recall@5, no reranker)
+
+Paired difference with 95% CI; positive means BM25 is better.
+
+| chunking, embedder | hand-written | LLM-drafted |
+|---|---|---|
+| fixed, minilm | +0.089 [-0.067, +0.244] (n=45) | +0.151 [+0.063, +0.238] (n=126) |
+| fixed, bge-small | -0.022 [-0.189, +0.133] (n=45) | +0.119 [+0.032, +0.206] (n=126) |
+| semantic, minilm | -0.033 [-0.178, +0.122] (n=45) | +0.159 [+0.056, +0.254] (n=126) |
+| semantic, bge-small | -0.156 [-0.278, -0.044] (n=45) | +0.111 [+0.008, +0.206] (n=126) |
+
 ## Failure analysis (fixed__hybrid__ce__minilm)
 
 Missed in top 10: 19 (right page, wrong passage: 14, wrong page: 5)
