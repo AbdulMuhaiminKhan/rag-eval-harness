@@ -306,3 +306,8 @@ scripts/         reporting, comparisons, review and CI-baseline helpers
 tests/           unit tests
 ci/              CI baseline
 ```
+
+## License
+
+[MIT](LICENSE) © 2026 Abdul Muhaimin Khan. The Kubernetes documentation used as the corpus is
+[CC BY 4.0](https://github.com/kubernetes/website/blob/main/LICENSE) © The Kubernetes Authors.
